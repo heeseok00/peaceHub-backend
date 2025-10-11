@@ -56,11 +56,11 @@ GOOGLE_CLIENT_SECRET="YOUR_GOOGLE_CLIENT_SECRET"
 # Prisma 스키마를 기반으로 데이터베이스에 테이블을 생성
 npx prisma migrate dev
 
-# Prisma 클라이언트를 생성합니다.
+# Prisma 클라이언트를 생성
 npx prisma generate
 
 4. 서버 실행
-# 개발 모드로 서버를 실행합니다 (nodemon 사용)
+# 개발 모드로 서버를 실행 (nodemon 사용)
 nodemon app.js
 
 개발 실행 포트: http://localhost:3000
