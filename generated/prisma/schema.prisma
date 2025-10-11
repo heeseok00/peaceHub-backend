@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// User model
+model User {
+  id        String   @id @default(cuid()) // prisma 자체 고유 id
+  googleId  String   @unique // googleId
+  email     String   @unique // google email
+  name      String //google profile name
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 1인 1방 가입
+  roomId String?
+  room   Room?   @relation(fields: [roomId], references: [id], name: "RoomParticipants", onDelete: SetNull)
+
+  // 방장의 경우도 1인 1방
+  ownedRoom Room? @relation("RoomOwner")
+}
+
+// Room model
+model Room {
+  id         String @id @default(cuid()) // 방 고유 코드
+  name       String // 방 이름
+  inviteCode String @unique // nanoid로 방 고유 초대 코드 부여
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 1인 1방 원칙
+  ownerId String @unique // 방장 id
+  owner   User   @relation(fields: [ownerId], references: [id], name: "RoomOwner", onDelete: Cascade)
+
+  // 멤버 리스트
+  participants User[] @relation("RoomParticipants")
+}
