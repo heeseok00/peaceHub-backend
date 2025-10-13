@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,36 +7,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User model
+// User Model
 model User {
-  id              String    @id @default(cuid()) // prisma 자체 고유 id
-  googleId        String    @unique // googleId
-  email           String    @unique // google email
-  name            String //google profile name
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id           String    @id @default(cuid()) // 사용자 난수 생성 id
+  googleId     String    @unique // 구글 고유 id
+  email        String    @unique // 구글 메일
+  name         String? // 구글 이름->프로필 설정 시 수정 
+  createdAt    DateTime  @default(now()) 
+  updatedAt    DateTime  @updatedAt
 
-  // 1인 1방 가입
-  roomId          String?
-  room            Room?     @relation(fields: [roomId], references: [id], name: "RoomParticipants", onDelete: SetNull)
+  // 1인 1방
+  roomId       String? // 외래 키
+  room         Room?     @relation(fields: [roomId], references: [id], name: "RoomParticipants", onDelete: SetNull) 
+  // Room에서 Room.id 참조하여 roomId에 작성 관계이름은 RoomParticipants 삭제 시 Null로 변경
 
-  // 방장의 경우도 1인 1방
-  ownedRoom       Room?     @relation("RoomOwner")
+  ownedRoom    Room?     @relation("RoomOwner") // 가상 관계 필드 Room.ownerId를 User.id에 연결
+
+  timeBlocks   TimeBlock[] // 업무 시간에 관한 내용
 }
 
-// Room model
+// Room Model
 model Room {
-  id          String   @id @default(cuid()) // 방 고유 코드
-  name        String   // 방 이름
-  inviteCode  String   @unique // nanoid로 방 고유 초대 코드 부여
+  id           String   @id @default(cuid()) // 방 고유 난수 생성 id
+  name         String // 방 이름
+  inviteCode   String   @unique // nanoid로 초대용 난수 코드 생성
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  // A Room has ONE owner, and a User can only own ONE room.
+  ownerId      String   @unique // 외래 키
+  owner        User     @relation(fields: [ownerId], references: [id], name: "RoomOwner", onDelete: Cascade)
 
-  // 1인 1방 원칙
-  ownerId     String   @unique // 방장 id
-  owner       User     @relation(fields: [ownerId], references: [id], name: "RoomOwner", onDelete: Cascade)
-
-  // 멤버 리스트
-  participants User[]   @relation("RoomParticipants")
+  participants User[]   @relation("RoomParticipants") // 참여자 목록
 }
+
+// TimeBlock Model
+model TimeBlock {
+  id            String        @id @default(cuid()) // 업무에 대한 고유 코드 생성
+  type          TimeBlockType // 조용, 수면, 업무 시간 종류
+  startDateTime DateTime // 시작 시간 프론트에서 날짜, 시간 데이터로 저장
+  endDateTime   DateTime // 시간 데이터 + 끝나는 시간으로 저장
+  task          String? // 세부내역
+
+  userId        String // 외래 키
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+    // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
+}
+
+enum TimeBlockType {
+  QUIET // 조용시간
+  SLEEP // 수면시간
+  TASK // 업무시간  
+} // 나열
+
