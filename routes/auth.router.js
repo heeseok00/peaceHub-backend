@@ -5,7 +5,7 @@ const router = express.Router(); // generate router object
 
 /** google sign up
  * GET /api/auth/google 
- * passport.authenticate('google' 해당 파트에서 내부적 처리로 googleStrategy 실행(config/passport/google.strategy.js)
+ * passport.authenticate('google' 해당 파트에서 내부적 처리로 googleStrategy 실행(config/passport/google.strategy.js))
 */
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
@@ -16,8 +16,9 @@ router.get('/google', passport.authenticate('google', { scope: ['profile', 'emai
 */
 router.get(
   '/google/callback',
+  // 로그인 실패 시 로그인 화면으로 리디렉션 기획에 따라 필요한 곳으로 리디렉션 가능
   passport.authenticate('google', {
-    failureRedirect: '/login',
+    failureRedirect: './',
   }),
   authController.googleCallback
 );
