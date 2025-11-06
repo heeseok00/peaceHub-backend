@@ -163,7 +163,7 @@ model TaskPreference {
   @@unique([userId, taskId])
 }
 
-// AssignedTask Model (변경) 그리디 알고리즘으로 배정된 업무 목록
+// AssignedTask Model 그리디 알고리즘으로 배정된 업무 목록
 model AssignedTask {
   id            String   @id @default(cuid())
   
@@ -175,7 +175,7 @@ model AssignedTask {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // 업무 부하
+  // 업무 난이도
   difficulty      Int
   
   // 방 연결

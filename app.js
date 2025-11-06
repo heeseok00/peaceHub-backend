@@ -14,7 +14,7 @@ const dotenv = require('dotenv'); // require env reader
 dotenv.config();
 
 const app = express();
-const port = 3000;
+const port = 8000;
 
 // passport setup configuration
 passportConfig();
@@ -62,3 +62,6 @@ app.get('/', (req, res) => {
 app.listen(port, () => {
   console.log(`port num:${port}`);
 });
+
+// 테스트 진행을 위한 app export
+module.exports = app;

@@ -18,7 +18,9 @@ router.get(
   '/google/callback',
   // 로그인 실패 시 로그인 화면으로 리디렉션 기획에 따라 필요한 곳으로 리디렉션 가능
   passport.authenticate('google', {
-    failureRedirect: './',
+    failureRedirect: '/login',
+    // 개발 이후 true로 변경
+    // session: false,
   }),
   authController.googleCallback
 );

@@ -1,9 +1,10 @@
 const roomService = require('../services/room.service'); // require room service
 
+
 // 방 참여 컨트롤러
 const createRoom = async (req, res, next) => {
+    
     try {
-
         // 방 이름, 방장 id 추출
         const { name } = req.body;
         const ownerId = req.user.id;
