@@ -1,9 +1,20 @@
-const express = require('express'); // require express framework
-const passport = require('passport'); // require passport middleware
+const express = require('express');
+const router = express.Router();
+const roomController = require('../controllers/room.controller'); // require room controller
 
-const router = express.Router(); // generate router object
+// 방 생성
+/**
+ * Method: POST
+ * path: /api/rooms/
+ */
+router.post('/', roomController.createRoom);
 
-// GET /api/room/generate
-// router.get('/generate')
+// 방 참여
+/**
+ * Method: POST
+ * path: /api/rooms/join
+ */
+router.post('/join', roomController.joinRoom);
 
+// router exports
 module.exports = router;

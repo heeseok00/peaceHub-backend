@@ -52,7 +52,7 @@ app.use('/api/auth', authRouter);
 // 세션 인증 후 사용자 객체 반환 라우터 연결
 app.use('/api/user', checkAuth, meRouter);
 
-// 세션 인증 후 방 관련 라우터 연결
+// 세션 인증 후 방 생성/참여 라우터 연결
 app.use('/api/room', checkAuth, roomRouter);
 
 app.get('/', (req, res) => {
