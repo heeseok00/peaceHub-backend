@@ -62,19 +62,19 @@ describe('Room API (/api/room)', () => {
 
   // --- 3. 테스트 후 정리 (afterAll) ---
   // 모든 테스트가 끝난 후 DB를 정리합니다.
-  // afterAll(async () => {
-  //   // 테스트로 생성된 모든 데이터를 정리합니다.
-  //   await prisma.user.deleteMany({
-  //     where: { id: { in: [userA.id, userB.id] } },
-  //   });
-  //   await prisma.roomTaskTemplate.deleteMany({
-  //     where: { id: testRoomTemplate.id },
-  //   });
-  //   // Room 삭제 시 onDelete: Cascade로 RoomTask 등도 삭제됨
-  //   await prisma.room.deleteMany({
-  //     where: { ownerId: userA.id },
-  //   });
-  // });
+  afterAll(async () => {
+    // 테스트로 생성된 모든 데이터를 정리합니다.
+    await prisma.user.deleteMany({
+      where: { id: { in: [userA.id, userB.id] } },
+    });
+    await prisma.roomTaskTemplate.deleteMany({
+      where: { id: testRoomTemplate.id },
+    });
+    // Room 삭제 시 onDelete: Cascade로 RoomTask 등도 삭제됨
+    await prisma.room.deleteMany({
+      where: { ownerId: userA.id },
+    });
+  });
 
   // --- 4. 테스트 케이스 ---
 
