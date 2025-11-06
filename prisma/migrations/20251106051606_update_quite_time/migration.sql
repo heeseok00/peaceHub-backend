@@ -7,6 +7,7 @@ CREATE TABLE `User` (
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updatedAt` DATETIME(3) NOT NULL,
     `roomId` VARCHAR(191) NULL,
+    `workLoad` INTEGER NOT NULL DEFAULT 0,
 
     UNIQUE INDEX `User_googleId_key`(`googleId`),
     UNIQUE INDEX `User_email_key`(`email`),
@@ -31,10 +32,22 @@ CREATE TABLE `Room` (
 CREATE TABLE `ScheduleBlock` (
     `id` VARCHAR(191) NOT NULL,
     `dayOfWeek` ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
-    `type` ENUM('QUIET', 'SLEEP', 'BUSY', 'TASK') NOT NULL,
+    `type` ENUM('QUIET', 'BUSY', 'TASK') NOT NULL,
     `startTime` INTEGER NOT NULL,
-    `endEndTime` INTEGER NOT NULL,
+    `endTime` INTEGER NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
+
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `RoomQuietBlock` (
+    `id` VARCHAR(191) NOT NULL,
+    `dayOfWeek` ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
+    `startTime` INTEGER NOT NULL,
+    `endTime` INTEGER NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
+    `setByUserId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -76,6 +89,7 @@ CREATE TABLE `AssignedTask` (
     `id` VARCHAR(191) NOT NULL,
     `RoomTaskId` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
+    `difficulty` INTEGER NOT NULL,
     `roomId` VARCHAR(191) NOT NULL,
     `startDateTime` DATETIME(3) NOT NULL,
     `endDateTime` DATETIME(3) NOT NULL,
@@ -92,6 +106,12 @@ ALTER TABLE `Room` ADD CONSTRAINT `Room_ownerId_fkey` FOREIGN KEY (`ownerId`) RE
 
 -- AddForeignKey
 ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `RoomQuietBlock` ADD CONSTRAINT `RoomQuietBlock_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `RoomQuietBlock` ADD CONSTRAINT `RoomQuietBlock_setByUserId_fkey` FOREIGN KEY (`setByUserId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `RoomTask` ADD CONSTRAINT `RoomTask_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
