@@ -1,4 +1,4 @@
-const roomService = require('../services/room.service'); // require room service
+const roomService = require('../services/rooms.service'); // require room service
 
 
 // 방 참여 컨트롤러

@@ -24,7 +24,7 @@ jest.mock('../middlewares/checkAuth.middleware', () => ({
 }));
 
 // --- 테스트 스위트 ---
-describe('Room API (/api/room)', () => {
+describe('Room API (/api/rooms)', () => {
   let userA; // 방장
   let userB; // 참여자
   let testRoomTemplate; // 테스트용 업무 템플릿
@@ -81,9 +81,9 @@ describe('Room API (/api/room)', () => {
   let inviteCodeForJoinTest; // 방 참여 테스트를 위해 초대 코드를 저장할 변수
 
   /**
-   * [A] 방 생성 (POST /api/room)
+   * [A] 방 생성 (POST /api/rooms)
    */
-  describe('POST /api/room', () => {
+  describe('POST /api/rooms', () => {
     it('방장이 새 방을 생성하면 201 상태와 방 정보를 반환해야 합니다', async () => {
       // (1) "방장A"로 로그인한 척 하도록 모킹 설정
       //    (isLoggedIn 함수가 실행될 때, req.user에 userA 정보를 주입)
@@ -94,7 +94,7 @@ describe('Room API (/api/room)', () => {
 
       // (2) API 호출
       const res = await request(app)
-        .post('/api/room') // app.js에서 /api/room로 설정했다고 가정
+        .post('/api/rooms') // app.js에서 /api/rooms로 설정했다고 가정
         .send({ name: '테스트 방' });
 
       // (3) 응답 검증
@@ -125,7 +125,7 @@ describe('Room API (/api/room)', () => {
 
       // (2) API 호출
       const res = await request(app)
-        .post('/api/room')
+        .post('/api/rooms')
         .send({ name: '두 번째 방' });
 
       // (3) 응답 검증 (409 Conflict)
@@ -135,9 +135,9 @@ describe('Room API (/api/room)', () => {
   });
 
   /**
-   * [B] 방 참여 (POST /api/room/join)
+   * [B] 방 참여 (POST /api/rooms/join)
    */
-  describe('POST /api/room/join', () => {
+  describe('POST /api/rooms/join', () => {
     it('새로운 유저가 유효한 초대 코드로 참여하면 200 상태를 반환해야 합니다', async () => {
       // (1) "참여자B" (방이 없음)로 로그인한 척
       isLoggedIn.mockImplementation((req, res, next) => {
@@ -147,7 +147,7 @@ describe('Room API (/api/room)', () => {
 
       // (2) API 호출
       const res = await request(app)
-        .post('/api/room/join')
+        .post('/api/rooms/join')
         .send({ inviteCode: inviteCodeForJoinTest }); // [사용] 방 생성 테스트에서 받은 코드
 
       // (3) 응답 검증
@@ -168,7 +168,7 @@ describe('Room API (/api/room)', () => {
 
       // (2) API 호출
       const res = await request(app)
-        .post('/api/room/join')
+        .post('/api/rooms/join')
         .send({ inviteCode: inviteCodeForJoinTest });
 
       // (3) 응답 검증
@@ -185,7 +185,7 @@ describe('Room API (/api/room)', () => {
 
       // (2) API 호출
       const res = await request(app)
-        .post('/api/room/join')
+        .post('/api/rooms/join')
         .send({ inviteCode: 'INVALID_CODE_123' }); // 잘못된 코드
 
       // (3) 응답 검증

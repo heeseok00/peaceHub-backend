@@ -3,7 +3,7 @@ const passport = require('passport'); // require passport middleware
 const passportConfig = require('./config/passport/passportSetup'); // require passport setup file
 
 const authRouter = require('./routes/auth.router'); // require auth router
-const roomRouter = require('./routes/room.router'); // require room router
+const roomRouter = require('./routes/rooms.router'); // require room router
 const meRouter = require('./routes/me.router'); // require me router
 
 const session = require('express-session'); // require express session middleware
@@ -50,10 +50,10 @@ app.use(passport.session());
 app.use('/api/auth', authRouter);
 
 // 세션 인증 후 사용자 객체 반환 라우터 연결
-app.use('/api/user', checkAuth, meRouter);
+app.use('/api/users', checkAuth, meRouter);
 
 // 세션 인증 후 방 생성/참여 라우터 연결
-app.use('/api/room', checkAuth, roomRouter);
+app.use('/api/rooms', checkAuth, roomRouter);
 
 app.get('/', (req, res) => {
   res.send('Server running');
