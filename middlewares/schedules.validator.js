@@ -85,12 +85,12 @@ const validateBlock = (req, res, next) => {
 
         for (let i = 1; i < dailyBlocks.length; i++) {
             // 정렬 이후 앞선 time block의 종료 시간이 이후 time block의 시작 시간보다 클 경우(겹칠 경우)
-            if (timeBlock[i - 1].endTime > timeBlock[i].startTime) {
+            if (dailyBlocks[i - 1].endTime > dailyBlocks[i].startTime) {
                 // 409 conflict와 함께 겹친 두 time block을 반환 
                 return res.status(409).json({
                     message: 'time conflict',
-                    preBlock: timeBlock[i - 1],
-                    lateBlock: timeBlock[i]
+                    preBlock: dailyBlocks[i - 1],
+                    lateBlock: dailyBlocks[i]
                 });
             }
         }
@@ -112,7 +112,11 @@ const validateBlock = (req, res, next) => {
             // 종료시간 == 시작시간 검사
             if (dailyBlocks[i - 1].endTime !== dailyBlocks[i].startTime) {
                 // 공백 발견 시 400 bad request와 공백 시간 반환
-                return res.status(400).json({ message: `${day} ${dailyBlocks[i - 1].endTime}분 ~ ${dailyBlocks[i].startTime}분 공백` });
+                return res.status(400).json({
+                     message: `${day} ${dailyBlocks[i - 1].endTime}분 ~ ${dailyBlocks[i].startTime}분 공백`,
+                     preBlock: dailyBlocks[i - 1],
+                     lateBlock: dailyBlocks[i]
+                    });
             }
         }
     }
