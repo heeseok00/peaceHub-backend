@@ -80,13 +80,13 @@ const joinRoom = async (inviteCode, userId) => {
     });
 
     if (!room) {
-        // 코드가 존재하지 않으면 404 에러 반환
+        // 코드가 존재하지 않으면 404 not found 반환
         throw new RoomError('invalid code', 404);
     }
     // 방 생성 시 다른 방에 참여하고 있는지 확인
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (user.roomId) {
-        // 사용자가 이미 roomId를 가지고 있으면 409 에러 반환
+        // 사용자가 이미 roomId를 가지고 있으면 409 conflict 반환
         throw new RoomError('already in another room', 409);
     }
 

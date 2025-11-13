@@ -1,9 +1,10 @@
+const { Prisma } = require('@prisma/client');
 const roomService = require('../services/rooms.service'); // require room service
 
 
 // 방 참여 컨트롤러
 const createRoom = async (req, res, next) => {
-    
+
     try {
         // 방 이름, 방장 id 추출
         const { name } = req.body;
@@ -28,7 +29,11 @@ const createRoom = async (req, res, next) => {
             // 방장이 이미 방에 속해있을 경우 409 에러 반환
             return res.status(error.status).json({ message: error.message });
         }
-        // 그 외 에러(로직 에러 x) 500 에러 반환
+        else if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+            // 초대 코드가 db 내에서 중복될 경우 prisma에서 @unique로 자동 확인
+            return res.status(409).json({ message: 'invite code conflict' });
+        }
+        // 그 외 500 에러 반환
         next(error);
     }
 };
@@ -62,7 +67,7 @@ const joinRoom = async (req, res, next) => {
             // 코드가 유효하지 않을 경우 404 not found 반환
             return res.status(error.status).json({ message: error.message });
         }
-        // 그 외 에러(로직 에러 x) 500 에러 반환
+        // 그 외 500 에러 반환
         next(error);
     }
 };
