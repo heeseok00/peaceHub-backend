@@ -29,20 +29,20 @@ describe('Schedule API (/api/schedules)', () => {
     });
   });
 
-  // afterAll(async () => {
-  //   // 2-2. 생성한 유저 및 관련 데이터 삭제
-  //   await prisma.user.delete({
-  //     where: { id: testUser.id },
-  //   });
-  //   // (onDelete: Cascade로 ScheduleBlock도 자동 삭제됨)
-  // });
+  afterAll(async () => {
+    // 2-2. 생성한 유저 및 관련 데이터 삭제
+    await prisma.user.delete({
+      where: { id: testUser.id },
+    });
+    // (onDelete: Cascade로 ScheduleBlock도 자동 삭제됨)
+  });
 
-  // // [중요] 각 테스트(it) 실행 전에 ScheduleBlock을 초기화
-  // beforeEach(async () => {
-  //   await prisma.scheduleBlock.deleteMany({
-  //     where: { userId: testUser.id },
-  //   });
-  // });
+  // [중요] 각 테스트(it) 실행 전에 ScheduleBlock을 초기화
+  beforeEach(async () => {
+    await prisma.scheduleBlock.deleteMany({
+      where: { userId: testUser.id },
+    });
+  });
 
   // --- 3. GET /api/schedules 테스트 ---
   describe('GET /api/schedules (스케줄 조회)', () => {
