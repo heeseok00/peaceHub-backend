@@ -95,7 +95,7 @@ const validateBlock = (req, res, next) => {
             }
         }
         
-        // 배열 내 빈틈 검사 빈틈 존재 시 400 not found 반환
+        // 배열 내 빈틈 검사 빈틈 존재 시 400 bad request 반환
 
         // 00분 공백 검사
         if (dailyBlocks[0].startTime !== 0) {
