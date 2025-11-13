@@ -27,9 +27,6 @@ model User {
   // 주간 스케줄 타임 테이블 목록
   scheduleBlocks ScheduleBlock[]
 
-  // 방 공통 조용시간 기록
-  createdQuietBlock RoomQuietBlock[]
-
   // 지난 주 업무 강도(기본 세팅 = 0)
   workLoad  Int @default(0)
 
@@ -54,9 +51,6 @@ model Room {
 
   // 참여자 목록
   participants User[]   @relation("RoomParticipants") 
-
-  // 방 공용 조용 시간
-  quietTimeBlocks RoomQuietBlock[]
 
   // 배정 가능 업무 목록
   RoomTasks RoomTask[]
@@ -94,22 +88,6 @@ enum DayOfWeek {
   FRIDAY 
   SATURDAY 
   SUNDAY 
-}
-
-// RoomQuietBlock Model (방 공용 조용시간) 개인 TASK 시간에서 제외할 시간
-model RoomQuietBlock {
-  id                 String    @id @default(cuid())
-  dayOfWeek          DayOfWeek
-  startTime          Int
-  endTime            Int
-
-  // 어떤 방의 조용시간인지
-  roomId      String
-  room        Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  // 누가 설정했는지
-  setByUserId String
-  setUser     User   @relation(fields: [setByUserId], references: [id], onDelete: Cascade)
 }
 
 // RoomTaskTemplate Modle 방이 생성될 때마다 템플릿에서 업무를 복사

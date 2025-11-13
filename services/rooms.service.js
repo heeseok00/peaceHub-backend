@@ -2,7 +2,7 @@ const prisma = require('../prismaClient');
 const { nanoid } = require('nanoid'); // 방 고유 코드 생성을 위한 nanoid
 
 // 에러 발생 표시를 위한 클래스
-// 방 or 코드가 없을 경우: 404 반환
+// 코드가 없을 경우: 404 반환
 // 방에 이미 속해 있을 경우: 409 반환
 class RoomError extends Error {
     constructor(message, status) {
@@ -90,7 +90,7 @@ const joinRoom = async (inviteCode, userId) => {
         throw new RoomError('already in another room', 409);
     }
 
-    // 방 참여 시 User의 roomId를 room의 id를 가져와 업데이트
+    // 방 참여 시 User의 roomId 필드를 참여한 room의 id로 업데이트
     await prisma.user.update({
         where: { id: userId },
         data: { roomId: room.id },

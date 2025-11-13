@@ -10,7 +10,7 @@ const createRoom = async (req, res, next) => {
         const ownerId = req.user.id;
 
         // 유효성 검사
-        // 방 이름이 없을 경우 400 에러 반환
+        // 방 이름이 없을 경우 400 bad request 반환
         if (!name) {
             return res.status(400).json({ message: 'need room name' });
         }
@@ -43,7 +43,7 @@ const joinRoom = async (req, res, next) => {
         const userId = req.user.id;
 
         //  유효성 검사
-        // 방 코드로 검사 코드가 없을 경우 400 에러 반환
+        // 방 코드로 검사 코드가 없을 경우 400 bad request 반환
         if (!inviteCode) {
             return res.status(400).json({ message: 'need invite code' });
         }
@@ -58,7 +58,8 @@ const joinRoom = async (req, res, next) => {
     } catch (error) {
         // 에러 처리
         if (error instanceof roomService.RoomError) {
-            // 방 참여자가 이미 다른 방에 참여 시 404 에러 반환
+            // 방 참여자가 이미 다른 방에 참여 시 409 conflict 반환
+            // 코드가 유효하지 않을 경우 404 not found 반환
             return res.status(error.status).json({ message: error.message });
         }
         // 그 외 에러(로직 에러 x) 500 에러 반환
