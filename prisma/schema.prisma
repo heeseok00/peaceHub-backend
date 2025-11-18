@@ -26,7 +26,7 @@ model User {
 
   // 주간 스케줄 타임 테이블 목록
   scheduleBlocks ScheduleBlock[]
-
+  scheduleHistory ScheduleHistory[]
   // 지난 주 업무 강도(기본 세팅 = 0)
   workLoad  Int @default(0)
 
@@ -83,6 +83,7 @@ model RoomTask {
 
   // 하나의 업무가 여러 스케줄을 차지할 경우 배열로 처리
   scheduleBlocks ScheduleBlock[]
+  scheduleHistory ScheduleHistory[]
 }
 
 // TaskPreference Model 선호 업무 목록
@@ -140,4 +141,26 @@ enum TimeBlockType {
 enum ScheduleStatus {
   ACTIVE  // 현재 적용 중
   TEMPORARY // 스케줄러에 의해 다음 주에 사용될 스케줄
+}
+
+// 지난 날짜의 스케줄 아카이브
+model ScheduleHistory {
+  id            String        @id @default(cuid())
+  
+  startTime DateTime
+  endTime   DateTime
+  
+  type          TimeBlockType // QUIET, BUSY, FREE, TASK
+  
+  // 배정되었던 업무 정보
+  roomTaskId    String?
+  roomTask      RoomTask?     @relation(fields: [roomTaskId], references: [id], onDelete: SetNull)
+  
+  difficulty    Int?
+
+  userId        String
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 날짜별 조회용 인덱스
+  @@index([userId, startTime])
 }

@@ -1,100 +1,60 @@
 const prisma = require('../prismaClient');
 
-// post time table
 const registSchedule = async (table, userId) => {
-    // 스케줄 최초 등록인지, 수정인지 확인
-    const checkScheduleStatus = await prisma.scheduleBlock.findFirst({
-        where: {
-            userId: userId,
-            status: 'ACTIVE',
-        },
+    // 날짜 문자열을 date 객체로 변경
+    const timeBlock = table.map((block) => ({
+        // 사용자 id
+        userId: userId,
+        // block 종류
+        type: block.type,
+        // 시작 시간
+        startTime: new Date(block.startTime),
+        // 종료 시간
+        endTime: new Date(block.endTime),
+    }));
+
+    const checkNewUser = await prisma.scheduleBlock.findFirst({
+        // ACTIVE 필드 여부로 신규 유저 판별
+        where: { userId: userId, status: 'ACTIVE' },
     });
 
-    // 트랜젝션으로 스케줄 저장
     const newSchedule = await prisma.$transaction(async (tx) => {
-        // ACTIVE 스케줄이 있을 경우
-        if (checkScheduleStatus) {
-            const dataToCreate = table.map((block) => ({
-                // 사용자 id
-                userId: userId,
-                // 요일
-                dayOfWeek: block.dayOfWeek,
-                // block 종류
-                type: block.type,
-                // 시작 시간
-                startTime: block.startTime,
-                // 종료 시간
-                endTime: block.endTime,
-                // schedule status를 TEMPORARY 설정
-                status: 'TEMPORARY',
-            }));
-
-
-            // 임시 상태 스케줄 삭제 후 덮어쓰기
+        if (checkNewUser) {
+            // 기존 유저의 경우 TEMPORARY만 삭제
             await tx.scheduleBlock.deleteMany({
                 where: { userId: userId, status: 'TEMPORARY' },
             });
-            await tx.scheduleBlock.createMany({
-                data: dataToCreate,
-            });
 
-            // 임시 상태 스케줄 반환
+            // TEMPORARY 재작성
+            const temporaryData = timeBlock.map(b => ({ ...b, status: 'TEMPORARY' }));
+            await tx.scheduleBlock.createMany({ data: temporaryData });
+
+            // 업데이트된 스케줄 블럭 반환
             return tx.scheduleBlock.findMany({
                 where: { userId: userId, status: 'TEMPORARY' },
-                // 요일, 시간 순 정렬
-                orderBy: [
-                    { dayOfWeek: 'asc' },
-                    { startTime: 'asc' }
-                ]
+                // 시간 순 정렬
+                orderBy: { startTime: 'asc' }
             });
+
         }
 
-        // 최초 스케줄 등록 시
+        // 신규 유저
         else {
-            // ACTIVE 저장용
-            const dataToCreateActive = table.map((block) => ({
-                // 사용자 id
-                userId: userId,
-                // 요일
-                dayOfWeek: block.dayOfWeek,
-                // block 종류
-                type: block.type,
-                // 시작 시간
-                startTime: block.startTime,
-                // 종료 시간
-                endTime: block.endTime,
-                // schedule status를 ACTIVE로 설정
-                status: 'ACTIVE',
-            }));
-            // TEMPORARY 저장용
-            const dataToCreateTemporary = table.map((block) => ({
-                // 사용자 id
-                userId: userId,
-                // 요일
-                dayOfWeek: block.dayOfWeek,
-                // block 종류
-                type: block.type,
-                // 시작 시간
-                startTime: block.startTime,
-                // 종료 시간
-                endTime: block.endTime,
-                // schedule status를 TEMPORARY로 설정
-                status: 'TEMPORARY',
-            }));
+            // active 표시
+            const activeData = timeBlock.map(b => ({ ...b, status: 'ACTIVE' }));
+            // temporary 표시
+            const temporaryData = timeBlock.map(b => ({ ...b, status: 'TEMPORARY' }));
 
-            // 최초 등록 시 스케줄 DB가 비어있으므로 deleteMany 없이 바로 createMany 실행
+            // 삭제 없이 바로 생성
             await tx.scheduleBlock.createMany({
-                data: [...dataToCreateActive, ...dataToCreateTemporary],
+                data: [...activeData, ...temporaryData]
             });
 
-            // ACTIVE 스케줄을 반환
+            // 생성된 스케줄(ACTIVE) 반환
             return tx.scheduleBlock.findMany({
                 where: { userId: userId, status: 'ACTIVE' },
-                // 요일, 시간 순 정렬
-                orderBy: [
-                    { dayOfWeek: 'asc' },
-                    { startTime: 'asc' }
-                ]
+                // 시간 순 정렬
+                orderBy: { startTime: 'asc' }
             });
         }
     });
@@ -102,19 +62,22 @@ const registSchedule = async (table, userId) => {
     return newSchedule;
 };
 
-// get time table
+// status에 따른 스케줄 조회
 const getSchedule = async (userId, status) => {
     return prisma.scheduleBlock.findMany({
-        // 스케줄 수정 페이지에서 표시를 위해 임시 상태 스케줄 반환
-        where: { userId: userId, status: status },
-        // 요일, 시간 순 정렬
-        orderBy: [
-            { dayOfWeek: 'asc' },
-            { startTime: 'asc' }
-        ]
+        where: {
+            userId: userId,
+            status: status,
+        },
+        include: {
+            // (선택) 나중에 배정된 업무(Task) 정보도 같이 보고 싶다면 포함
+            roomTask: {
+                select: { title: true }
+            }
+        },
+        orderBy: { startTime: 'asc' },
     });
 };
-
 
 module.exports = {
     registSchedule,

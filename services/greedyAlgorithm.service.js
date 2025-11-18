@@ -71,7 +71,7 @@ const runWeeklyAssignment = async () => {
     // await tx.assignedTask.deleteMany(...);
     
     // 4-2. 이번 주 AssignedTask 일괄 생성 (createMany)
-    // (이때 계산된 startDateTime / endDateTime 저장)
+    // (이때 계산된 startTime / endTime 저장)
     
     // 4-3. 이번 주 workload 합계를 계산하여 User.workLoad 필드 업데이트
   });

@@ -17,14 +17,14 @@ router.post('/', checkValidate, scheduleController.registSchedule);
 // 이번 주 타임 테이블 조회
 /**
  * Method: GET
- * path: /api/ActiveSchedules/
+ * path: /api/schedules/ActiveSchedules/
  */
 router.get('/ActiveSchedules', scheduleController.getActiveSchedule);
 
 // 다음 주 타임 테이블 조회
 /**
  * Method: GET
- * path: /api/Temporaryschedules/
+ * path: /api/schedules/Temporaryschedules/
  */
 router.get('/TemporarySchedules', scheduleController.getTemporarySchedule);
 
