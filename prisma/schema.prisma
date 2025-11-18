@@ -65,8 +65,11 @@ model ScheduleBlock {
   dayOfWeek     DayOfWeek // 요일
   type          TimeBlockType // 조용, 수면, 바쁜, 업무 시간 종류
   startTime     Int // 시작 시간 (시간 * 60) + 분 으로 저장
-  endTime   Int // 종료 시간 (시간 * 60) + 분 으로 저장
+  endTime       Int // 종료 시간 (시간 * 60) + 분 으로 저장
   
+  // 현재 적용 중인지, 임시 저장 상태인지 구분
+  status        ScheduleStatus @default(TEMPORARY)
+
   // 외래 키
   userId        String
   // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
@@ -88,6 +91,12 @@ enum DayOfWeek {
   FRIDAY 
   SATURDAY 
   SUNDAY 
+}
+
+// 스케줄 상태
+enum ScheduleStatus {
+  ACTIVE  // 현재 적용 중
+  TEMPORARY // 스케줄러에 의해 다음 주에 사용될 스케줄
 }
 
 // RoomTaskTemplate Modle 방이 생성될 때마다 템플릿에서 업무를 복사

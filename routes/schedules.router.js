@@ -14,11 +14,19 @@ const scheduleController = require('../controllers/schedules.controller'); // re
  */
 router.post('/', checkValidate, scheduleController.registSchedule);
 
-// 타임 테이블 조회
+// 이번 주 타임 테이블 조회
 /**
  * Method: GET
- * path: /api/schedules/
+ * path: /api/ActiveSchedules/
  */
-router.get('/', scheduleController.getSchedule);
+router.get('/ActiveSchedules', scheduleController.getActiveSchedule);
+
+// 다음 주 타임 테이블 조회
+/**
+ * Method: GET
+ * path: /api/Temporaryschedules/
+ */
+router.get('/TemporarySchedules', scheduleController.getTemporarySchedule);
+
 // router exports
 module.exports = router;

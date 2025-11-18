@@ -35,6 +35,7 @@ CREATE TABLE `ScheduleBlock` (
     `type` ENUM('QUIET', 'BUSY', 'TASK') NOT NULL,
     `startTime` INTEGER NOT NULL,
     `endTime` INTEGER NOT NULL,
+    `status` ENUM('ACTIVE', 'TEMPORARY') NOT NULL DEFAULT 'TEMPORARY',
     `userId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)

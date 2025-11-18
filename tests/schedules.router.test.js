@@ -1,198 +1,158 @@
 const request = require('supertest');
 const app = require('../app'); // Express 앱 (app.js)
 const prisma = require('../prismaClient'); // Prisma Client
-// 모킹할 checkAuth 미들웨어
-const { isLoggedIn } = require('../middlewares/checkAuth.middleware');
 
-/**
- * 1. 인증 미들웨어 모킹
- * app.js에서 사용하는 checkAuth(isLoggedIn)를 모킹합니다.
- */
+// --- 1. 미들웨어 모킹 ---
+const { isLoggedIn } = require('../middlewares/checkAuth.middleware');
+const { validateBlock } = require('../middlewares/schedules.validator');
+
+// 1-1. checkAuth (isLoggedIn) 모킹
 jest.mock('../middlewares/checkAuth.middleware', () => ({
-  // app.js는 checkAuth라는 이름으로 import하지만, 원본 모듈은 isLoggedIn을 export합니다.
-  isLoggedIn: jest.fn((req, res, next) => next()),
+  // app.js에서는 'checkAuth'로 사용하지만, 원본 모듈 export 이름은 'isLoggedIn'
+  isLoggedIn: jest.fn((req, res, next) => next()), 
 }));
+
+// 1-2. schedules.validator (validateBlock) 모킹
+// (실제 유효성 검사는 별도로 테스트하고, 여기서는 통과시킵니다)
+jest.mock('../middlewares/schedules.validator', () => ({
+  validateBlock: jest.fn((req, res, next) => next()),
+}));
+
 
 // --- 테스트 스위트 ---
 describe('Schedule API (/api/schedules)', () => {
-  let testUser; // 테스트용 사용자
+  let userNew; // "신규 사용자" (ACTIVE 스케줄 없음)
+  let userExisting; // "기존 사용자" (ACTIVE 스케줄 있음)
+  let schedulePayload; // 프론트가 보낼 "완전한" 스케줄 배열
 
   // --- 2. 테스트 전/후 설정 ---
   beforeAll(async () => {
-    // 2-1. 테스트용 유저 1명 생성
-    testUser = await prisma.user.create({
+    // 2-1. 테스트용 유저 생성
+    userNew = await prisma.user.create({
+      data: { googleId: 'newUser@google', email: 'new@email.com', name: '신규유저' },
+    });
+    userExisting = await prisma.user.create({
+      data: { googleId: 'existingUser@google', email: 'existing@email.com', name: '기존유저' },
+    });
+
+    // 2-2. "기존 사용자"에게는 'ACTIVE' 스케줄을 미리 생성
+    await prisma.scheduleBlock.create({
       data: {
-        googleId: 'scheduleTestUser_googleId',
-        email: 'scheduleTest@email.com',
-        name: '스케줄테스터',
+        userId: userExisting.id,
+        dayOfWeek: 'MONDAY',
+        type: 'TASK',
+        startTime: 0,
+        endTime: 1440,
+        status: 'ACTIVE',
       },
     });
+
+    // 2-3. 프론트가 POST로 보낼 스케줄 페이로드 정의
+    schedulePayload = [
+      { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 600 },
+      { dayOfWeek: 'MONDAY', type: 'TASK', startTime: 600, endTime: 1440 },
+      // (Validator를 모킹했으므로, 7일치 24시간을 다 채우지 않아도 테스트 가능)
+    ];
   });
 
   afterAll(async () => {
-    // 2-2. 생성한 유저 및 관련 데이터 삭제
-    await prisma.user.delete({
-      where: { id: testUser.id },
+    // 2-4. 생성한 모든 유저 및 스케줄 삭제
+    await prisma.user.deleteMany({
+      where: { id: { in: [userNew.id, userExisting.id] } },
     });
-    // (onDelete: Cascade로 ScheduleBlock도 자동 삭제됨)
+    // (User 삭제 시 ScheduleBlock도 onDelete: Cascade로 자동 삭제됨)
   });
 
-  // [중요] 각 테스트(it) 실행 전에 ScheduleBlock을 초기화
-  beforeEach(async () => {
-    await prisma.scheduleBlock.deleteMany({
-      where: { userId: testUser.id },
-    });
-  });
-
-  // --- 3. GET /api/schedules 테스트 ---
-  describe('GET /api/schedules (스케줄 조회)', () => {
-    it('스케줄이 없는 경우 200 상태와 빈 배열을 반환해야 합니다', async () => {
-      // (1) testUser로 로그인한 척
+  // --- 3. POST /api/schedules/ 테스트 ---
+  describe('POST / (스케줄 등록)', () => {
+    it('신규 사용자(ACTIVE 없음)가 등록 시, ACTIVE와 TEMPORARY 2세트를 생성해야 합니다', async () => {
+      // (1) "신규 유저"로 로그인한 척
       isLoggedIn.mockImplementation((req, res, next) => {
-        req.user = testUser;
+        req.user = userNew;
         next();
       });
 
       // (2) API 호출
-      const res = await request(app).get('/api/schedules');
+      const res = await request(app)
+        .post('/api/schedules')
+        .send(schedulePayload);
 
-      // (3) 응답 검증
-      expect(res.status).toBe(200);
-      expect(res.body).toEqual([]); // 빈 배열
+      // (3) 응답 검증 (ACTIVE 스케줄이 반환되어야 함)
+      expect(res.status).toBe(201);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].status).toBe('ACTIVE');
+
+      // (4) DB 검증 (ACTIVE 2개, TEMPORARY 2개, 총 4개)
+      const dbCount = await prisma.scheduleBlock.count({ where: { userId: userNew.id } });
+      expect(dbCount).toBe(4);
+      const activeCount = await prisma.scheduleBlock.count({ where: { userId: userNew.id, status: 'ACTIVE' } });
+      expect(activeCount).toBe(2);
     });
 
-    it('스케줄이 있는 경우 200 상태와 정렬된 배열을 반환해야 합니다', async () => {
-      // (1) 테스트용 데이터 미리 삽입
-      await prisma.scheduleBlock.create({
-        data: {
-          userId: testUser.id,
-          dayOfWeek: 'MONDAY',
-          type: 'TASK',
-          startTime: 600,
-          endTime: 720,
-        },
-      });
-
-      // (2) testUser로 로그인한 척
+    it('기존 사용자(ACTIVE 있음)가 등록 시, TEMPORARY 1세트만 덮어써야 합니다', async () => {
+      // (1) "기존 유저"로 로그인한 척
       isLoggedIn.mockImplementation((req, res, next) => {
-        req.user = testUser;
+        req.user = userExisting;
         next();
       });
 
-      // (3) API 호출
-      const res = await request(app).get('/api/schedules');
+      // (2) API 호출
+      const res = await request(app)
+        .post('/api/schedules')
+        .send(schedulePayload);
 
-      // (4) 응답 검증
-      expect(res.status).toBe(200);
-      expect(res.body.length).toBe(1);
-      expect(res.body[0].type).toBe('TASK');
+      // (3) 응답 검증 (TEMPORARY 스케줄이 반환되어야 함)
+      expect(res.status).toBe(201);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].status).toBe('TEMPORARY');
+
+      // (4) DB 검증 (기존 ACTIVE 1개 + 새 TEMPORARY 2개 = 총 3개)
+      const dbCount = await prisma.scheduleBlock.count({ where: { userId: userExisting.id } });
+      expect(dbCount).toBe(3);
+      const activeCount = await prisma.scheduleBlock.count({ where: { userId: userExisting.id, status: 'ACTIVE' } });
+      expect(activeCount).toBe(1); // 기존 ACTIVE는 건드리지 않음
     });
   });
 
-  // --- 4. POST /api/schedules 테스트 ---
-  describe('POST /api/schedules (스케줄 등록/덮어쓰기)', () => {
-    // (1) testUser로 로그인한 척 (POST 테스트 내내 고정)
-    beforeEach(() => {
+  // --- 4. GET /api/schedules/... 테스트 ---
+  describe('GET /ActiveSchedules (ACTIVE 조회)', () => {
+    it('ACTIVE 스케줄만 반환해야 합니다', async () => {
+      // (1) "기존 유저"로 로그인한 척
       isLoggedIn.mockImplementation((req, res, next) => {
-        req.user = testUser;
+        req.user = userExisting;
         next();
       });
+
+      // (2) API 호출
+      const res = await request(app).get('/api/schedules/ActiveSchedules');
+
+      // (3) 응답 검증 (beforeAll에서 1개 생성함)
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(1);
+      expect(res.body[0].status).toBe('ACTIVE');
     });
+  });
 
-    it('유효한 스케줄(공백/겹침 없음)을 보내면 201과 새 스케줄을 반환해야 합니다', async () => {
-      const validSchedule = [
-        // 월요일 00:00 ~ 24:00
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 600 },
-        { dayOfWeek: 'MONDAY', type: 'TASK', startTime: 600, endTime: 1440 },
-        // 화요일 00:00 ~ 24:00
-        { dayOfWeek: 'TUESDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        // (수~일요일 00:00 ~ 24:00 ... TASK로 채워야 함)
-      ];
-      // (테스트 편의상 MONDAY, TUESDAY만 보냄)
-      // [수정] Validator가 7일치 24시간을 모두 검사하므로, 7일치를 모두 채워야 함
-      const fullValidSchedule = [
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 600 },
-        { dayOfWeek: 'MONDAY', type: 'TASK', startTime: 600, endTime: 1440 },
-        { dayOfWeek: 'TUESDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        { dayOfWeek: 'WEDNESDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        { dayOfWeek: 'THURSDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        { dayOfWeek: 'FRIDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        { dayOfWeek: 'SATURDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-        { dayOfWeek: 'SUNDAY', type: 'TASK', startTime: 0, endTime: 1440 },
-      ];
+  describe('GET /TemporarySchedules (TEMPORARY 조회)', () => {
+    it('TEMPORARY 스케줄만 반환해야 합니다', async () => {
+      // (1) "기존 유저"로 로그인한 척
+      isLoggedIn.mockImplementation((req, res, next) => {
+        req.user = userExisting;
+        next();
+      });
 
+      // (2) API 호출
+      const res = await request(app).get('/api/schedules/TemporarySchedules');
 
-      const res = await request(app)
-        .post('/api/schedules')
-        .send(fullValidSchedule);
-
-      // 응답 검증
-      expect(res.status).toBe(201);
-      expect(res.body.length).toBe(8); // (블록 8개)
-      expect(res.body[0].type).toBe('QUIET');
-
-      // DB 검증
-      const dbCount = await prisma.scheduleBlock.count({ where: { userId: testUser.id } });
-      expect(dbCount).toBe(8);
-    });
-
-    it('시간이 겹치는 배열을 보내면 409 에러를 반환해야 합니다', async () => {
-      const overlappingSchedule = [
-        // (월요일만 보냄 -> 빈틈 검사에서 400이 먼저 뜰 것임)
-        // (테스트를 위해 빈틈 검사보다 겹침 검사를 먼저 통과하도록 수정)
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 600 },
-        { dayOfWeek: 'MONDAY', type: 'TASK', startTime: 540, endTime: 1440 }, // 540~600 겹침
-      ];
-
-      const res = await request(app)
-        .post('/api/schedules')
-        .send(overlappingSchedule);
-
-      // 409 Conflict (Validator가 겹침을 감지)
-      expect(res.status).toBe(409);
-      expect(res.body.message).toBe('time conflict');
-    });
-
-    it('시간에 빈틈이 있는 배열을 보내면 400 에러를 반환해야 합니다 (중간 빈틈)', async () => {
-      const gappedSchedule = [
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 600 },
-        // 600 ~ 700 사이가 빔
-        { dayOfWeek: 'MONDAY', type: 'TASK', startTime: 700, endTime: 1440 },
-      ];
-
-      const res = await request(app)
-        .post('/api/schedules')
-        .send(gappedSchedule);
-
-      // 400 Bad Request (Validator가 빈틈을 감지)
-      expect(res.status).toBe(400);
-      expect(res.body.message).toContain(`${res.body.preBlock.dayOfWeek} ${res.body.preBlock.endTime}분 ~ ${res.body.lateBlock.startTime}분 공백`); // Validator의 에러 메시지
-    });
-
-    it('00:00시에 시작하지 않으면 400 에러를 반환해야 합니다', async () => {
-      const gapAtStartSchedule = [
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 10, endTime: 1440 }, // 0분 시작이 아님
-      ];
-
-      const res = await request(app)
-        .post('/api/schedules')
-        .send(gapAtStartSchedule);
-
-      expect(res.status).toBe(400);
-      expect(res.body.message).toContain('00분 공백');
-    });
-
-    it('24:00시에 끝나지 않으면 400 에러를 반환해야 합니다', async () => {
-      const gapAtEndSchedule = [
-        { dayOfWeek: 'MONDAY', type: 'QUIET', startTime: 0, endTime: 1439 }, // 1440분 끝이 아님
-      ];
-
-      const res = await request(app)
-        .post('/api/schedules')
-        .send(gapAtEndSchedule);
-
-      expect(res.status).toBe(400);
-      expect(res.body.message).toContain('1440분 공백');
+      // (3) 응답 검증 (POST 테스트에서 2개 생성함)
+      // [주의] Jest는 테스트 파일을 병렬 실행할 수 있으므로,
+      //       POST 테스트가 먼저 실행된다는 보장은 없으나,
+      //       일반적으로 파일 내 describe 순서대로 실행됩니다.
+      //       (만약 이 테스트가 실패하면, POST 테스트에서 생성된 데이터를 참조하지 않도록
+      //        beforeEach에서 TEMPORARY 데이터를 따로 생성해야 합니다.)
+      expect(res.status).toBe(200);
+      expect(res.body.length).toBe(2);
+      expect(res.body[0].status).toBe('TEMPORARY');
     });
   });
 });
