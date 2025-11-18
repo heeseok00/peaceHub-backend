@@ -1,4 +1,5 @@
 const express = require('express'); // require express framework
+const cors = require('cors') // require cors
 const passport = require('passport'); // require passport middleware
 const passportConfig = require('./config/passport/passportSetup'); // require passport setup file
 
@@ -6,6 +7,8 @@ const authRouter = require('./routes/auth.router'); // require auth router
 const roomRouter = require('./routes/rooms.router'); // require room router
 const userRouter = require('./routes/users.router'); // require user router
 const scheduleRouter = require('./routes/schedules.router'); // require schedule router
+
+const startScheduler = require('./scheduler'); // require scheduler
 
 const session = require('express-session'); // require express session middleware
 const {isLoggedIn:checkAuth} = require('./middlewares/checkAuth.middleware'); // require session check middleware
@@ -17,6 +20,13 @@ dotenv.config();
 
 const app = express();
 const port = 8000;
+
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL, 
+    credentials: true, 
+  })
+);
 
 // passport setup configuration
 passportConfig();
@@ -71,3 +81,6 @@ app.listen(port, () => {
 
 // 테스트 진행을 위한 app export
 module.exports = app;
+
+// 업무 분배를 위한 스케줄러
+startScheduler();

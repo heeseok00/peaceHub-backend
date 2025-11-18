@@ -19,7 +19,7 @@ router.get(
   // 로그인 실패 시 로그인 화면으로 리디렉션 기획에 따라 필요한 곳으로 리디렉션 가능
   passport.authenticate('google', {
     // 프론트 로그인 페이지로 리디렉션
-    failureRedirect: '/login',
+    failureRedirect: process.env.FRONTEND_URL + '/login',
     // 개발 이후 true로 변경
     // session: false,
   }),
