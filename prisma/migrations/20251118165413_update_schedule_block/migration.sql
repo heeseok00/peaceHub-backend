@@ -29,19 +29,6 @@ CREATE TABLE `Room` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `ScheduleBlock` (
-    `id` VARCHAR(191) NOT NULL,
-    `dayOfWeek` ENUM('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY') NOT NULL,
-    `type` ENUM('QUIET', 'BUSY', 'TASK') NOT NULL,
-    `startTime` INTEGER NOT NULL,
-    `endTime` INTEGER NOT NULL,
-    `status` ENUM('ACTIVE', 'TEMPORARY') NOT NULL DEFAULT 'TEMPORARY',
-    `userId` VARCHAR(191) NOT NULL,
-
-    PRIMARY KEY (`id`)
-) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- CreateTable
 CREATE TABLE `RoomTaskTemplate` (
     `id` VARCHAR(191) NOT NULL,
     `title` VARCHAR(191) NOT NULL,
@@ -74,16 +61,17 @@ CREATE TABLE `TaskPreference` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `AssignedTask` (
+CREATE TABLE `ScheduleBlock` (
     `id` VARCHAR(191) NOT NULL,
-    `RoomTaskId` VARCHAR(191) NOT NULL,
+    `type` ENUM('QUIET', 'BUSY', 'FREE', 'TASK') NOT NULL,
+    `startTime` DATETIME(3) NOT NULL,
+    `endTime` DATETIME(3) NOT NULL,
+    `status` ENUM('ACTIVE', 'TEMPORARY') NOT NULL DEFAULT 'TEMPORARY',
+    `difficulty` INTEGER NULL,
+    `roomTaskId` VARCHAR(191) NULL,
     `userId` VARCHAR(191) NOT NULL,
-    `difficulty` INTEGER NOT NULL,
-    `roomId` VARCHAR(191) NOT NULL,
-    `startDateTime` DATETIME(3) NOT NULL,
-    `endDateTime` DATETIME(3) NOT NULL,
 
-    UNIQUE INDEX `AssignedTask_RoomTaskId_key`(`RoomTaskId`),
+    INDEX `ScheduleBlock_userId_startTime_status_idx`(`userId`, `startTime`, `status`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -92,9 +80,6 @@ ALTER TABLE `User` ADD CONSTRAINT `User_roomId_fkey` FOREIGN KEY (`roomId`) REFE
 
 -- AddForeignKey
 ALTER TABLE `Room` ADD CONSTRAINT `Room_ownerId_fkey` FOREIGN KEY (`ownerId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `RoomTask` ADD CONSTRAINT `RoomTask_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
@@ -106,10 +91,7 @@ ALTER TABLE `TaskPreference` ADD CONSTRAINT `TaskPreference_userId_fkey` FOREIGN
 ALTER TABLE `TaskPreference` ADD CONSTRAINT `TaskPreference_taskId_fkey` FOREIGN KEY (`taskId`) REFERENCES `RoomTask`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AssignedTask` ADD CONSTRAINT `AssignedTask_RoomTaskId_fkey` FOREIGN KEY (`RoomTaskId`) REFERENCES `RoomTask`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_roomTaskId_fkey` FOREIGN KEY (`roomTaskId`) REFERENCES `RoomTask`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `AssignedTask` ADD CONSTRAINT `AssignedTask_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `AssignedTask` ADD CONSTRAINT `AssignedTask_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

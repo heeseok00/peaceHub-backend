@@ -32,9 +32,6 @@ model User {
 
   // 1, 2지망 업무 목록
   taskPreferences TaskPreference[]
-
-  // 그리디 알고리즘으로 할당받은 업무 목록
-  assignedTasks AssignedTask[]
 }
 
 // Room Model
@@ -54,49 +51,6 @@ model Room {
 
   // 배정 가능 업무 목록
   RoomTasks RoomTask[]
-
-  //배정된 업무 목록
-  assignedTasks AssignedTask[]
-}
-
-// ScheduleBlock Model 주간 스케줄
-model ScheduleBlock {
-  id            String        @id @default(cuid()) // 업무에 대한 고유 코드 생성
-  dayOfWeek     DayOfWeek // 요일
-  type          TimeBlockType // 조용, 수면, 바쁜, 업무 시간 종류
-  startTime     Int // 시작 시간 (시간 * 60) + 분 으로 저장
-  endTime       Int // 종료 시간 (시간 * 60) + 분 으로 저장
-  
-  // 현재 적용 중인지, 임시 저장 상태인지 구분
-  status        ScheduleStatus @default(TEMPORARY)
-
-  // 외래 키
-  userId        String
-  // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
-  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-enum TimeBlockType {
-  QUIET // 조용시간
-  BUSY // 바쁜시간
-  TASK // 업무시간  
-}
-
-// 요일 종류
-enum DayOfWeek { 
-  MONDAY
-  TUESDAY 
-  WEDNESDAY 
-  THURSDAY 
-  FRIDAY 
-  SATURDAY 
-  SUNDAY 
-}
-
-// 스케줄 상태
-enum ScheduleStatus {
-  ACTIVE  // 현재 적용 중
-  TEMPORARY // 스케줄러에 의해 다음 주에 사용될 스케줄
 }
 
 // RoomTaskTemplate Modle 방이 생성될 때마다 템플릿에서 업무를 복사
@@ -127,8 +81,8 @@ model RoomTask {
   // 업무 신청자
   preferences TaskPreference[]
 
-  // 업무 배정 결과
-  assignedTask AssignedTask?
+  // 하나의 업무가 여러 스케줄을 차지할 경우 배열로 처리
+  scheduleBlocks ScheduleBlock[]
 }
 
 // TaskPreference Model 선호 업무 목록
@@ -150,26 +104,40 @@ model TaskPreference {
   @@unique([userId, taskId])
 }
 
-// AssignedTask Model 그리디 알고리즘으로 배정된 업무 목록
-model AssignedTask {
-  id            String   @id @default(cuid())
+// ScheduleBlock Model 주간 스케줄
+model ScheduleBlock {
+  id            String        @id @default(cuid()) // 업무에 대한 고유 코드 생성
+
+  type          TimeBlockType // 조용, 수면, 바쁜, 빈, 업무 시간 종류
+  startTime     DateTime // 블록 날짜 + 시작 시간
+  endTime       DateTime // 블록 날짜 + 종료 시간
   
-  // 업무 종류
-  RoomTaskId String        @unique
-  RoomTask   RoomTask @relation(fields: [RoomTaskId], references: [id])
+  // 현재 적용 중인지, 임시 저장 상태인지 구분
+  status        ScheduleStatus @default(TEMPORARY)
 
-  // 배정자
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // TASK일 경우 배정된 업무 정보
+  difficulty    Int?
+  roomTaskId    String?       
+  roomTask      RoomTask?      @relation(fields: [roomTaskId], references: [id])
 
-  // 업무 난이도
-  difficulty      Int
-  
-  // 방 연결
-  roomId String
-  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  // 외래 키
+  userId        String
+  // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // 업무 시간 시간대는 task 타임테이블에서, 날짜는 스케줄러를 통해 날짜 데이터 받아옴
-  startDateTime DateTime 
-  endDateTime   DateTime
+  // 탐색 속도 향상을 위한 인덱스
+  @@index([userId, startTime, status])
+}
+
+enum TimeBlockType {
+  QUIET // 조용시간
+  BUSY // 바쁜시간
+  FREE // 빈 시간
+  TASK // 업무시간  
+}
+
+// 스케줄 상태
+enum ScheduleStatus {
+  ACTIVE  // 현재 적용 중
+  TEMPORARY // 스케줄러에 의해 다음 주에 사용될 스케줄
 }
