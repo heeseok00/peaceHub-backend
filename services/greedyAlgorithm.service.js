@@ -2,32 +2,6 @@
 const prisma = require('../prismaClient');
 
 /**
- * [스케줄러 작업 1]
- * 모든 유저의 TEMPORARY 스케줄을 ACTIVE로 승격시킵니다.
- */
-const promoteSchedules = async () => {
-  console.log('[Scheduler] 스케줄 승격을 시작합니다...');
-  
-  await prisma.$transaction(async (tx) => {
-    // 1. "지난 주"의 ACTIVE 스케줄을 모두 삭제
-    await tx.scheduleBlock.deleteMany({
-      where: { status: 'ACTIVE' },
-    });
-
-    // 2. "이번 주"의 TEMPORARY 스케줄을 ACTIVE로 승격
-    await tx.scheduleBlock.updateMany({
-      where: { status: 'TEMPORARY' },
-      data: { status: 'ACTIVE' },
-    });
-    
-    // (선택 사항) 다음 주를 위해 TEMPORARY를 미리 복사/생성할 수 있습니다.
-    // ...
-  });
-  
-  console.log('[Scheduler] 스케줄 승격 완료.');
-};
-
-/**
  * [스케줄러 작업 2]
  * 그리디 알고리즘을 실행하여 모든 방의 업무를 배정합니다.
  */
@@ -80,6 +54,5 @@ const runWeeklyAssignment = async () => {
 };
 
 module.exports = {
-  promoteSchedules,
   runWeeklyAssignment,
 };

@@ -1,5 +1,6 @@
 const prisma = require('../prismaClient');
 
+// 스케줄 등록, 수정
 const registSchedule = async (table, userId) => {
     // 날짜 문자열을 date 객체로 변경
     const timeBlock = table.map((block) => ({
@@ -26,7 +27,7 @@ const registSchedule = async (table, userId) => {
             });
 
             // TEMPORARY 재작성
-            const temporaryData = timeBlock.map(b => ({ ...b, status: 'TEMPORARY' }));
+            const temporaryData = timeBlock.map(block => ({ ...block, status: 'TEMPORARY' }));
             await tx.scheduleBlock.createMany({ data: temporaryData });
 
             // 업데이트된 스케줄 블럭 반환
@@ -40,12 +41,27 @@ const registSchedule = async (table, userId) => {
 
         // 신규 유저
         else {
-            // active 표시
-            const activeData = timeBlock.map(b => ({ ...b, status: 'ACTIVE' }));
-            // temporary 표시
-            const temporaryData = timeBlock.map(b => ({ ...b, status: 'TEMPORARY' }));
+            // active 저장
+            const activeData = timeBlock.map(block => ({ ...block, status: 'ACTIVE' }));
+            // temporary 저장
+            const temporaryData = timeBlock.map(b => {
+                const nextStart = new Date(b.startTime);
+                const nextEnd = new Date(b.endTime);
 
-            // 삭제 없이 바로 생성
+                // ACTIVE 스케줄에 +7일
+                nextStart.setDate(nextStart.getDate() + 7);
+                nextEnd.setDate(nextEnd.getDate() + 7);
+
+                return {
+                    ...b,
+                    // 시작, 종료 날짜 변경
+                    startTime: nextStart,
+                    endTime: nextEnd,
+                    status: 'TEMPORARY'
+                };
+            });
+
+            // 신규 유저이므로 삭제 없이 바로 생성
             await tx.scheduleBlock.createMany({
                 data: [...activeData, ...temporaryData]
             });
@@ -79,7 +95,86 @@ const getSchedule = async (userId, status) => {
     });
 };
 
+// 스케줄 history 아카이빙, TEMPORARY 상태를 ACTIVE로 승격, ACTIVE +7일 하여 TEMPORARY로 복사
+const archiveAndCopySchedule = async () => {
+    try {
+        // 아카이빙, 승격, 복사를 트랜잭션으로 실행
+        await prisma.$transaction(async (tx) => {
+
+            // 아카이빙 시작
+            // 모든 사용자의 현재 ACTIVE 상태의 스케줄을 ScheduleHistory로 복사
+            const pastSchedule = await tx.scheduleBlock.findMany({
+                where: { status: 'ACTIVE' },
+            });
+
+            if (pastSchedule.length > 0) {
+                // 아카이빙 할 데이터 추출 전체 데이터에서 ScheduleBlock에서 id, status는 제외
+                const historyData = pastSchedule.map(block => ({
+                    startTime: block.startTime,
+                    endTime: block.endTime,
+                    type: block.type,
+                    roomTaskId: block.roomTaskId,
+                    difficulty: block.difficulty,
+                    userId: block.userId,
+                }));
+                await tx.scheduleHistory.createMany({ data: historyData });
+
+                // 원본 ACTIVE 스케줄 전체 삭제
+                await tx.scheduleBlock.deleteMany({
+                    where: { status: 'ACTIVE' },
+                });
+            }
+
+            // 승격 시작
+            // 모든 TEMPORARY 스케줄을 ACTIVE로 변경
+            await tx.scheduleBlock.updateMany({
+                where: { status: 'TEMPORARY' },
+                data: { status: 'ACTIVE' },
+            });
+
+            // 복사 시작
+            // ACTIVE 스케줄에 +7일 하여 TEMPORARY 상태로 복사
+            const currentActiveSchedule = await tx.scheduleBlock.findMany({
+                where: { status: 'ACTIVE' },
+            });
+
+            if (currentActiveSchedule.length > 0) {
+                // 날짜를 +7일 하여 TEMPORARY 데이터 생성
+                const nextWeekSchedule = currentActiveSchedule.map(block => {
+                    const startTime = new Date(block.startTime);
+                    startTime.setDate(startTime.getDate() + 7);
+
+                    const endTime = new Date(block.endTime);
+                    endTime.setDate(endTime.getDate() + 7);
+
+                    return {
+                        userId: block.userId,
+                        startTime: startTime,
+                        endTime: endTime,
+                        // TASK 상태였다면 다시 FREE로 초기화
+                        type: block.type === 'TASK' ? 'FREE' : block.type,
+                        status: 'TEMPORARY',
+                        roomTaskId: null,
+                        difficulty: null,
+                    };
+                });
+
+                // TEMPORARY 저장
+                await tx.scheduleBlock.createMany({
+                    data: nextWeekSchedule,
+                });
+            }
+        });
+
+    } catch (error) {
+        throw error;
+    }
+};
+
+
+
 module.exports = {
     registSchedule,
     getSchedule,
+    archiveAndCopySchedule,
 };
