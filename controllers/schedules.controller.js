@@ -13,8 +13,13 @@ const registSchedule = async (req, res, next) => {
         // await 후 서비스에서 생성한 time table 객체 배열 반환
         const newSchedule = await scheduleService.registSchedule(table, userId);
 
-        // 201 create와 함깨 time table 객체 배열 반환
-        res.status(201).json(newSchedule);
+        if (newSchedule) {
+            // 기존 유저 201 create와 함께 수정된 스케줄 데이터 반환
+            res.status(201).json(newSchedule);
+        } else {
+            // 신규 유저 배열 없이 201 create만 반환
+            res.status(201).send(); 
+        }
     } catch (error) {
         next(error);
     }

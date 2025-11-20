@@ -1,10 +1,5 @@
-// services/algorithm.service.js (신규 파일)
 const prisma = require('../prismaClient');
 
-/**
- * [스케줄러 작업 2]
- * 그리디 알고리즘을 실행하여 모든 방의 업무를 배정합니다.
- */
 const runWeeklyAssignment = async () => {
   console.log('[Scheduler] 주간 업무 배분 알고리즘을 시작합니다...');
 

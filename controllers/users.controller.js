@@ -2,8 +2,10 @@ const userService = require('../services/users.service'); // require user servic
 
 const getUser = async (req, res, next) => {
     try {
-        // 인증 미들웨어에서 조회한 사용자 객체를 바로 반환
-        res.status(200).json(req.user);
+        const userId = req.user.id;
+        const user = await userService.getUser(userId);
+
+        res.status(200).json(user);
     }
     catch (error) {
         next(error);

@@ -67,11 +67,7 @@ const registSchedule = async (table, userId) => {
             });
 
             // 생성된 스케줄(ACTIVE) 반환
-            return tx.scheduleBlock.findMany({
-                where: { userId: userId, status: 'ACTIVE' },
-                // 시간 순 정렬
-                orderBy: { startTime: 'asc' }
-            });
+            return null;
         }
     });
 
@@ -86,7 +82,7 @@ const getSchedule = async (userId, status) => {
             status: status,
         },
         include: {
-            // (선택) 나중에 배정된 업무(Task) 정보도 같이 보고 싶다면 포함
+            // 업무 정보
             roomTask: {
                 select: { title: true }
             }
