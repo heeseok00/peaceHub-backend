@@ -1,4 +1,6 @@
 const validatePreferences = (req, res, next) => {
+  const preferences = req.body;
+
   // 배열 확인
   if (!Array.isArray(preferences)) {
     return res.status(400).json({ message: 'body is not array' });
@@ -20,7 +22,7 @@ const validatePreferences = (req, res, next) => {
   const uniqueIds = new Set(taskIds);
   if (taskIds.length !== uniqueIds.size) {
     // 중복 제거 배열, 기존 배열 길이가 다르면 중복이 있는 것으로 판단(1지망, 2지망 업무 동일)
-    return res.status(400).json({ message: 'task duplication'});
+    return res.status(400).json({ message: 'task duplication' });
   } next();
 };
 

@@ -7,15 +7,27 @@ const getRoomTasks = async (userId) => {
         where: { id: userId },
         select: { roomId: true }
     });
-
+    
     // 방 업무 반환
     return prisma.roomTask.findMany({
         where: { roomId: user.roomId },
-        // 업무 이름
         select: {
             id: true,
             title: true,
-        }
+
+            // 신청자도 표시
+            preferences: {
+                select: {
+                    // 지망
+                    priority: true,
+                    userId: true,
+                    user: {
+                        select: { name: true } // 사용자 이름 (화면 표시용)
+                    }
+                },
+                orderBy: { priority: 'asc' } // 1지망부터 정렬
+            }
+        },
     });
 };
 
@@ -40,7 +52,9 @@ const setTaskPreferences = async (userId, preferences) => {
 
     // 내 방 업무가 아닐 경우 error throw
     if (validTasks !== preferences.length) {
-        throw new Error('INVALID_TASK_ID');
+        const error =  new Error('INVALID_TASK_ID');
+        error.status = 400;
+        throw error;
     }
 
     // 기존 선호도 삭제, 새 선호도 저장을 트랜잭션으로 진행 
