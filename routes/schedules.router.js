@@ -28,5 +28,12 @@ router.get('/ActiveSchedules', scheduleController.getActiveSchedule);
  */
 router.get('/TemporarySchedules', scheduleController.getTemporarySchedule);
 
+// 일별 타임 테이블 조회
+/**
+ * Method: GET
+ * path: /api/schedules/daily?date=YYYY-MM-DD
+ */
+router.get('/daily', scheduleController.getDailySchedule);
+
 // router exports
 module.exports = router;

@@ -55,6 +55,29 @@ const getTemporarySchedule = async (req, res, next) => {
         next(error);
     }
 }
+
+const getDailySchedule = async(req,res,next)=>{
+    try{
+        // userId 추출
+        const userId = req.user.id;
+        const {date} = req.query;
+
+        // 날짜 파라미터 유효성 검사
+        if ((!date) || isNaN(new Date(date).getTime())) {
+            return res.status(400).json({ 
+                message: 'need validate date query parameter' 
+            });
+        }
+
+        const dailySchedule = await scheduleService.getDailySchedule(userId, date);
+
+        // 200 Ok와 함께 time table 객체 배열 반환
+        res.status(200).json(dailySchedule);
+    } catch(error){
+        next(error);
+    }
+}
+
 module.exports = {
     // time table 등록 함수
     registSchedule,

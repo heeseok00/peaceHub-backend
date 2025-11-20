@@ -167,10 +167,63 @@ const archiveAndCopySchedule = async () => {
     }
 };
 
+const getDailySchedule = async (userId, date) => {
+    // 쿼리 파라미터에서 Date 객체로 저장
+    const targetDate = new Date(date);
 
+    // 시작, 종료 시간 설정
+    const startTime = new Date(targetDate);
+    startTime.setHours(0, 0, 0, 0);
+
+    const endTime = new Date(targetDate);
+    endTime.setHours(23, 59, 59, 999);
+
+    const [block, history] = await Promise.all([
+        // ACTIVE, TEMPORARY조회
+        prisma.scheduleBlock.findMany({
+            where: {
+                userId: userId,
+                // status를 조회하지 않는 것으로 ACTIVE, TEMPORARY 동시 조회
+                // status: '',
+                // 날짜 조회
+                startTime: {
+                    // 시작 시간 <= 스케줄 <= 종료 시간
+                    gte: startDay,
+                    lte: endDay,
+                },
+            },
+            include: {
+                roomTask: {
+                    select: { title: true }
+                }
+            },
+            // 시간 순 정렬
+            orderBy: { startTime: 'asc' },
+        }),
+
+        // ScheduleHistory 조회
+        prisma.scheduleHistory.findMany({
+            where: {
+                userId: userId,
+                startTime: {
+                    gte: startOfDay,
+                    lte: endOfDay,
+                },
+            },
+            include: {
+                roomTask: { select: { title: true } }
+            },
+            orderBy: { startTime: 'asc' },
+        }),
+    ]);
+
+    // 3. 두 결과를 합쳐서 반환
+    return [...block, ...history];
+};
 
 module.exports = {
     registSchedule,
     getSchedule,
     archiveAndCopySchedule,
+    getDailySchedule,
 };
