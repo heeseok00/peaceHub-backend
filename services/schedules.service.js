@@ -188,8 +188,8 @@ const getDailySchedule = async (userId, date) => {
                 // 날짜 조회
                 startTime: {
                     // 시작 시간 <= 스케줄 <= 종료 시간
-                    gte: startDay,
-                    lte: endDay,
+                    gte: startTime,
+                    lte: endTime,
                 },
             },
             include: {
@@ -206,8 +206,8 @@ const getDailySchedule = async (userId, date) => {
             where: {
                 userId: userId,
                 startTime: {
-                    gte: startOfDay,
-                    lte: endOfDay,
+                    gte: startTime,
+                    lte: endTime,
                 },
             },
             include: {
@@ -250,8 +250,8 @@ const getMemberDailySchedule = async (userId, date) => {
                 // 날짜 조회
                 startTime: {
                     // 시작 시간 <= 스케줄 <= 종료 시간
-                    gte: startDay,
-                    lte: endDay,
+                    gte: startTime,
+                    lte: endTime,
                 },
                 // 조용시간과 업무시간만 가져오기
                 type: {
@@ -270,10 +270,11 @@ const getMemberDailySchedule = async (userId, date) => {
         // ScheduleHistory 조회
         prisma.scheduleHistory.findMany({
             where: {
-                userId: userId,
+                // 사용자의 방 멤버 필터링
+                user: { roomId: myRoomId },
                 startTime: {
-                    gte: startOfDay,
-                    lte: endOfDay,
+                    gte: startTime,
+                    lte: endTime,
                 },
             },
             include: {
