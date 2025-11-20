@@ -13,6 +13,7 @@ const getRoomTasks = async (userId) => {
         where: { roomId: user.roomId },
         // 업무 이름
         select: {
+            id: true,
             title: true,
         }
     });
@@ -33,10 +34,10 @@ const setTaskPreferences = async (userId, preferences) => {
             // 업무 id
             id: { in: taskIds },
             // 내 방 id
-            roomId: user.roomId 
+            roomId: user.roomId
         }
     });
-    
+
     // 내 방 업무가 아닐 경우 error throw
     if (validTasks !== preferences.length) {
         throw new Error('INVALID_TASK_ID');
@@ -64,7 +65,14 @@ const setTaskPreferences = async (userId, preferences) => {
     // 결과 반환, 선호도 지정 표에 해당 내용을 우선 표시
     return prisma.taskPreference.findMany({
         where: { userId: userId },
-        include: { task: { select: { title: true } } },
+        include: {
+            task: {
+                select: {
+                    id: true,
+                    title: true
+                }
+            }
+        },
         orderBy: { priority: 'asc' }
     });
 };

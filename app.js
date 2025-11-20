@@ -7,6 +7,7 @@ const authRouter = require('./routes/auth.router'); // require auth router
 const roomRouter = require('./routes/rooms.router'); // require room router
 const userRouter = require('./routes/users.router'); // require user router
 const scheduleRouter = require('./routes/schedules.router'); // require schedule router
+const taskRouter = require('./routes/tasks.router'); // require task router
 
 const startScheduler = require('./scheduler'); // require scheduler
 
@@ -69,6 +70,9 @@ app.use('/api/rooms', checkAuth, roomRouter);
 
 // 세션 인증 후 시간표 설정 라우터 연결
 app.use('/api/schedules', checkAuth, scheduleRouter);
+
+// 세션 인증 후 선호 업무 설정 라우터 연결
+app.use('/api/tasks', checkAuth, taskRouter);
 
 
 app.get('/', (req, res) => {
