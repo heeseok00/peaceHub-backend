@@ -19,14 +19,14 @@ router.post('/', checkValidate, scheduleController.registSchedule);
  * Method: GET
  * path: /api/schedules/ActiveSchedules/
  */
-router.get('/ActiveSchedules', scheduleController.getActiveSchedule);
+router.get('/activeSchedules', scheduleController.getActiveSchedule);
 
 // 다음 주 타임 테이블 조회
 /**
  * Method: GET
  * path: /api/schedules/Temporaryschedules/
  */
-router.get('/TemporarySchedules', scheduleController.getTemporarySchedule);
+router.get('/temporarySchedules', scheduleController.getTemporarySchedule);
 
 // 일별 타임 테이블 조회
 /**
@@ -34,6 +34,13 @@ router.get('/TemporarySchedules', scheduleController.getTemporarySchedule);
  * path: /api/schedules/daily?date=YYYY-MM-DD
  */
 router.get('/daily', scheduleController.getDailySchedule);
+
+// 일별 멤버들 타임 테이블 조회
+/**
+ * Method: GET
+ * path: /api/schedules/memberDaily?date=YYYY-MM-DD
+ */
+router.get('/memberDaily', scheduleController.getMemberDailySchedule);
 
 // router exports
 module.exports = router;

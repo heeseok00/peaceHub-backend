@@ -1,16 +1,16 @@
 const scheduleService = require('../services/schedules.service'); // require schedule service
 
-// time table 등록
+// 스케줄 등록
 const registSchedule = async (req, res, next) => {
 
     try {
-        // 유효성, 무결성 검사가 끝난 time table
+        // 유효성, 무결성 검사가 끝난 스케줄
         const table = req.body;
         // 사용자 id 추출
         const userId = req.user.id;
 
         // service 호출
-        // await 후 서비스에서 생성한 time table 객체 배열 반환
+        // await 후 서비스에서 생성한 스케줄 객체 배열 반환
         const newSchedule = await scheduleService.registSchedule(table, userId);
 
         if (newSchedule) {
@@ -26,7 +26,7 @@ const registSchedule = async (req, res, next) => {
 
 }
 
-// 사용자 active 상태 time table 요청
+// 사용자 active 상태 스케줄 요청
 const getActiveSchedule = async (req, res, next) => {
     try {
         // userId 추출
@@ -34,14 +34,14 @@ const getActiveSchedule = async (req, res, next) => {
         // service 호출
         const schedule = await scheduleService.getSchedule(userId, 'ACTIVE');
 
-        // 200 Ok와 함깨 time table 객체 배열 반환
+        // 200 Ok와 함깨 스케줄 객체 배열 반환
         res.status(200).json(schedule);
     } catch (error) {
         next(error);
     }
 }
 
-// 사용자 temporary 상태 time table 요청
+// 사용자 temporary 상태 스케줄 요청
 const getTemporarySchedule = async (req, res, next) => {
     try {
         // userId 추출
@@ -49,13 +49,14 @@ const getTemporarySchedule = async (req, res, next) => {
         // service 호출
         const schedule = await scheduleService.getSchedule(userId, 'TEMPORARY');
 
-        // 200 Ok와 함깨 time table 객체 배열 반환
+        // 200 Ok와 함깨 스케줄 객체 배열 반환
         res.status(200).json(schedule);
     } catch (error) {
         next(error);
     }
 }
 
+// 날짜별 사용자 스케줄 조회
 const getDailySchedule = async(req,res,next)=>{
     try{
         // userId 추출
@@ -71,7 +72,30 @@ const getDailySchedule = async(req,res,next)=>{
 
         const dailySchedule = await scheduleService.getDailySchedule(userId, date);
 
-        // 200 Ok와 함께 time table 객체 배열 반환
+        // 200 Ok와 함께 스케줄 객체 배열 반환
+        res.status(200).json(dailySchedule);
+    } catch(error){
+        next(error);
+    }
+}
+
+// 날짜별 사용자 스케줄 조회
+const getMemberDailySchedule = async(req,res,next)=>{
+    try{
+        // userId 추출
+        const userId = req.user.id;
+        const {date} = req.query;
+
+        // 날짜 파라미터 유효성 검사
+        if ((!date) || isNaN(new Date(date).getTime())) {
+            return res.status(400).json({ 
+                message: 'need validate date query parameter' 
+            });
+        }
+
+        const dailySchedule = await scheduleService.getMemberDailySchedule(userId, date);
+
+        // 200 Ok와 함께 스케줄 객체 배열 반환
         res.status(200).json(dailySchedule);
     } catch(error){
         next(error);
@@ -79,10 +103,14 @@ const getDailySchedule = async(req,res,next)=>{
 }
 
 module.exports = {
-    // time table 등록 함수
+    // 스케줄 등록 컨트롤러
     registSchedule,
-    // active time table 조회 함수
+    // active 스케줄 조회 컨트롤러
     getActiveSchedule,
-    // temporary time table 조회 함수
+    // temporary 스케줄 조회 컨트롤러
     getTemporarySchedule,
+    // 일별 스케줄 조회 컨트롤러
+    getDailySchedule,
+    // 일별 멤버 스케줄 조회 컨트롤러
+    getMemberDailySchedule,
 };
