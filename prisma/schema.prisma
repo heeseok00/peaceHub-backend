@@ -62,6 +62,9 @@ model RoomTaskTemplate {
   difficulty      Int
   // knapsack 용량
   estimatedTime   Int
+
+  // 횟수
+  frequency       Int @default(1)
 }
 
 // RoomTask Modle 템플릿에서 업무를 복사하고 방 id를 추가하여 연결
@@ -73,6 +76,9 @@ model RoomTask {
   difficulty      Int
   // knapsack 용량
   estimatedTime   Int
+
+  // 횟수
+  frequency       Int
 
   // 어떤 방인지
   roomId          String

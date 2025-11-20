@@ -34,6 +34,7 @@ CREATE TABLE `RoomTaskTemplate` (
     `title` VARCHAR(191) NOT NULL,
     `difficulty` INTEGER NOT NULL,
     `estimatedTime` INTEGER NOT NULL,
+    `frequency` INTEGER NOT NULL DEFAULT 1,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -44,6 +45,7 @@ CREATE TABLE `RoomTask` (
     `title` VARCHAR(191) NOT NULL,
     `difficulty` INTEGER NOT NULL,
     `estimatedTime` INTEGER NOT NULL,
+    `frequency` INTEGER NOT NULL,
     `roomId` VARCHAR(191) NOT NULL,
 
     PRIMARY KEY (`id`)
