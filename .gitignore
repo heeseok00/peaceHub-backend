@@ -11,3 +11,5 @@ npm-debug.log
 # 운영체제 생성 파일
 .DS_Store
 Thumbs.db
+
+tests
