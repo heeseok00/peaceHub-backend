@@ -115,7 +115,7 @@ model TaskPreference {
 model ScheduleBlock {
   id            String        @id @default(cuid()) // 업무에 대한 고유 코드 생성
 
-  type          TimeBlockType // 조용, 수면, 바쁜, 빈, 업무 시간 종류
+  type          TimeBlockType // QUIET, 수면, 바쁜, 빈, 업무 시간 종류
   startTime     DateTime // 블록 날짜 + 시작 시간
   endTime       DateTime // 블록 날짜 + 종료 시간
   
@@ -137,7 +137,7 @@ model ScheduleBlock {
 }
 
 enum TimeBlockType {
-  QUIET // 조용시간
+  QUIET // QUIET 시간
   BUSY // 바쁜시간
   FREE // 빈 시간
   TASK // 업무시간  

@@ -253,7 +253,7 @@ const getMemberDailySchedule = async (userId, date) => {
                     gte: startTime,
                     lte: endTime,
                 },
-                // 조용시간과 업무시간만 가져오기
+                // QUIET 시간과 업무시간만 가져오기
                 type: {
                     in:['QUIET', 'TASK']
                 }
