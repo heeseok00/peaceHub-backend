@@ -102,6 +102,20 @@ const getMemberDailySchedule = async(req,res,next)=>{
     }
 }
 
+const getMemberWeeklyTaskSchedule = async(req,res,next)=>{
+    try{
+        // userId 추출
+        const userId = req.user.id;
+
+        const weeklyTask = await scheduleService.getMemberWeeklyTaskSchedule(userId);
+
+        // 200 Ok와 함께 스케줄 객체 배열 반환
+        res.status(200).json(weeklyTask);
+    } catch(error){
+        next(error);
+    }
+}
+
 module.exports = {
     // 스케줄 등록 컨트롤러
     registSchedule,
@@ -113,4 +127,6 @@ module.exports = {
     getDailySchedule,
     // 일별 멤버 스케줄 조회 컨트롤러
     getMemberDailySchedule,
+    // 할당 업무 조회 컨트롤러
+    getMemberWeeklyTaskSchedule,
 };

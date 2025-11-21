@@ -167,6 +167,7 @@ const archiveAndCopySchedule = async () => {
     }
 };
 
+// 사용자의 일일 스케줄 반환
 const getDailySchedule = async (userId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
@@ -220,6 +221,7 @@ const getDailySchedule = async (userId, date) => {
     return [...block, ...history];
 };
 
+// 멤버들의 TASK, QUIET 블록 요청
 const getMemberDailySchedule = async (userId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
@@ -236,7 +238,7 @@ const getMemberDailySchedule = async (userId, date) => {
         where: { id: userId },
         select: { roomId: true }
     });
-    
+
     const myRoomId = user.roomId;
 
     const [block, history] = await Promise.all([
@@ -255,12 +257,18 @@ const getMemberDailySchedule = async (userId, date) => {
                 },
                 // QUIET 시간과 업무시간만 가져오기
                 type: {
-                    in:['QUIET', 'TASK']
+                    in: ['QUIET', 'TASK']
                 }
             },
             include: {
                 roomTask: {
                     select: { title: true }
+                },
+                user: {
+                    select: {
+                        // 모두의 타임 테이블에서 이름 출력 가능
+                        name: true,
+                    }
                 }
             },
             // 시간 순 정렬
@@ -287,10 +295,44 @@ const getMemberDailySchedule = async (userId, date) => {
     return [...block, ...history];
 };
 
+// 멤버들에게 할당된 업무 조회
+const getMemberWeeklyTaskSchedule = async (userId) => {
+
+    // 사용자가 속해있는 방 조회
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { roomId: true }
+    });
+
+    const myRoomId = user.roomId;
+
+    return prisma.scheduleBlock.findMany({
+        where: {
+            // 사용자의 방 멤버 필터링
+            user: { roomId: myRoomId },
+            status: 'ACTIVE',
+            type: 'TASK'
+        },
+        include: {
+            // 업무, 할당 유저의 이름 출력
+            roomTask: { select: { title: true } },
+            user: { select: { name: true } }
+        },
+        orderBy: { startTime: 'asc' },
+    })
+};
+
 module.exports = {
+    // 스케줄 등록 / 수정
     registSchedule,
+    // status에 맞는 스케줄 요청
     getSchedule,
+    // 스케줄 아카이빙, 승격, 복사
     archiveAndCopySchedule,
+    // 일일 스케줄 반환
     getDailySchedule,
+    // 방 멤버들의 QUIET, FREE 블록 반환
     getMemberDailySchedule,
+    // 방 멤버들에게 할당된 블록 반환
+    getMemberWeeklyTaskSchedule,
 };
