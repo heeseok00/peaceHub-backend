@@ -13,3 +13,6 @@ npm-debug.log
 Thumbs.db
 
 tests
+
+publicSSH.key.pub
+secretSSH.key

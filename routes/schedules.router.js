@@ -46,7 +46,7 @@ router.get('/memberDaily', checkRoom, scheduleController.getMemberDailySchedule)
 // 일별 멤버들 타임 테이블 조회
 /**
  * Method: GET
- * path: /api/schedules/memberTask
+ * path: /api/schedules/memberTask?date=YYYY-MM-DD
  */
 router.get('/memberTask', checkRoom, scheduleController.getMemberWeeklyTaskSchedule);
 
