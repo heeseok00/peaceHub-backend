@@ -17,8 +17,7 @@ COPY . .
 RUN npx prisma generate
 
 # 컨테이너 포트 지정
-EXPOSE 8000
+EXPOSE 22
 
-# 8. 실행 명령어
-# package.json에 설정한 "start" 스크립트(migrate -> seed -> node app.js)를 실행합니다.
+# 
 CMD ["npm", "start"]
