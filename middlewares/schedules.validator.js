@@ -38,7 +38,9 @@ const validateBlock = (req, res, next) => {
 
     for (const block of table) {
         // startTime에서 날짜 부분(YYYY-MM-DD)만 파싱하여 key로 사용
-        const dateKey = new Date(block.startTime).toISOString().split('T')[0];
+        const targetDate = new Date(block.startTime);
+        const kstDate = new Date(targetDate.getTime() + 9 * 60 * 60 * 1000);
+        const dateKey = kstDate.toISOString().split('T')[0];
 
         // 해당 key가 존재하지 않으면 배열 생성
         if (!blocksByDate[dateKey]) {

@@ -19,7 +19,7 @@ const preprocessSchedule = async (room) => {
     // QUIET 합집합 계산
     const roomQuietIntervals = mergeIntervals(allQuietBlocks);
 
-
+    
     // 개인 FREE 시간 계산 멤버마다 계산 반복하여 만든 배열을 전처리 결과로 반환
     return room.members.map(user => {
         // FREE 블록 가져오기
@@ -29,7 +29,7 @@ const preprocessSchedule = async (room) => {
                 startTime: new Date(block.startTime).getTime(),
                 endTime: new Date(block.endTime).getTime(),
                 // 날짜 객체 변환
-                date: new Date(block.startTime).toISOString().split('T')[0],
+                date: new Date(new Date(block.startTime).getTime() + 9 * 60 * 60 * 1000).toISOString().split('T')[0],
                 // 업무 고유 id
                 originalBlockId: block.id,
             }));
