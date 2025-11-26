@@ -21,7 +21,7 @@ router.get(
     // 프론트 로그인 페이지로 리디렉션
     failureRedirect: process.env.FRONTEND_URL + '/login',
     // 개발 이후 true로 변경
-    // session: false,
+    session: true,
   }),
   authController.googleCallback
 );

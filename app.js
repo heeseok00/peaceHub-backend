@@ -20,6 +20,10 @@ const dotenv = require('dotenv'); // require env reader
 dotenv.config();
 
 const app = express();
+
+// HTTPS 인식을 위해 프록시 신뢰 설정
+app.set('trust proxy', 1);
+
 const port = 8000;
 
 app.use(
@@ -47,7 +51,7 @@ app.use(
       // true = JavaScript 코드로 쿠키 접근 방지
       httpOnly: true, 
       // true = http 환경 외에서 쿠키 전송 방지 개발할 땐 false로 두기
-      secure: false, 
+      secure: process.env.NODE_ENV === 'production',
     },
   })
 );

@@ -63,7 +63,7 @@ npx prisma generate
 # 개발 모드로 서버를 실행 (nodemon 사용)
 nodemon app.js
 
-개발 실행 포트: http://localhost:3000
+개발 실행 포트: http://localhost:8000
 
 API 명세
 Auth (인증)
