@@ -69,11 +69,15 @@ const validateBlock = (req, res, next) => {
 
         // 24:00:00으로 끝나는지 검사
         const dayEnd = new Date(dailyBlocks[dailyBlocks.length - 1].endTime).getTime();
-        const expectedEnd = new Date(expectedStart);
-        //expectedStart의 날짜에 + 1
-        expectedEnd.setDate(expectedEnd.getDate() + 1);
+        // const expectedEnd = new Date(expectedStart);
+        // //expectedStart의 날짜에 + 1
+        // expectedEnd.setDate(expectedEnd.getDate() + 1);
+        // expectedEnd.setMilliseconds(expectedEnd.getDate() - 1);
 
-        if (dayEnd !== expectedEnd.getTime()) {
+        const expectedEnd = new Date(`${dateKey}T24:00:00.000Z`).getTime();
+        console.log(expectedEnd);
+
+        if (dayEnd !== expectedEnd - 1) {
             return res.status(400).json({ message: `${dateKey} 24시 00분 공백` });
         }
 
