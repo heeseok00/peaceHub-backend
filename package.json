@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "start": "npx prisma migrate deploy && npx prisma db seed && node app.js",
     "test": "jest"
   },
   "keywords": [],
@@ -25,5 +26,8 @@
     "nodemon": "^3.1.10",
     "prisma": "^6.16.3",
     "supertest": "^7.1.4"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

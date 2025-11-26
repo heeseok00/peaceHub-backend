@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.git
+.env
+Dockerfile
+README.md
+tests
+secretSSH.key
+publicSSH.key.pub
