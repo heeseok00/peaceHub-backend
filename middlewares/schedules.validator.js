@@ -33,74 +33,97 @@ const validateBlock = (req, res, next) => {
 
     // 모든 time block의 내용이 유효하다면 겹치는 시간과 빈틈이 없는지 검사
 
-    // 날짜별로 time block 정리를 위한 객체 생성
-    const blocksByDate = {};
+    // 요일별로 time block 정리를 위한 객체 생성
+    const blocksByDayOfWeek = {};
 
     for (const block of table) {
-        // startTime에서 날짜 부분(YYYY-MM-DD)만 파싱하여 key로 사용
-        const targetDate = new Date(block.startTime);
-        const kstDate = new Date(targetDate.getTime() + 9 * 60 * 60 * 1000);
-        const dateKey = kstDate.toISOString().split('T')[0];
+        const dayOfWeek = block.dayOfWeek;
 
-        // 해당 key가 존재하지 않으면 배열 생성
-        if (!blocksByDate[dateKey]) {
-            blocksByDate[dateKey] = [];
+        // dayOfWeek 유효성 검사
+        const validDaysOfWeek = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+        if (!validDaysOfWeek.includes(dayOfWeek)) {
+            return res.status(400).json({
+                message: 'invalid dayOfWeek',
+                invalidBlock: block
+            });
         }
-        // 해당 key의 value로 time block 객체 삽입
-        blocksByDate[dateKey].push(block);
+
+        // 해당 요일이 존재하지 않으면 배열 생성
+        if (!blocksByDayOfWeek[dayOfWeek]) {
+            blocksByDayOfWeek[dayOfWeek] = [];
+        }
+        // 해당 요일의 value로 time block 객체 삽입
+        blocksByDayOfWeek[dayOfWeek].push(block);
     }
 
-    // 날짜별로 순회하며 정렬 및 무결성 검사
-    for (const dateKey in blocksByDate) {
+    // 요일별로 순회하며 정렬 및 무결성 검사
+    for (const dayOfWeek in blocksByDayOfWeek) {
 
-        // 특정 날짜의 모든 block 리스트를 저장
-        const dailyBlocks = blocksByDate[dateKey];
+        // 특정 요일의 모든 block 리스트를 저장
+        const dailyBlocks = blocksByDayOfWeek[dayOfWeek];
 
         // 시작 시간을 기준으로 오름차순 정렬 O(NlogN)
-        dailyBlocks.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+        dailyBlocks.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+        // 첫 번째 블록의 시작 시간 추출
+        const firstBlockStart = new Date(dailyBlocks[0].startTime);
+        const firstBlockStartTime = firstBlockStart.getTime();
+
+        // 첫 번째 블록의 날짜 부분 추출 (YYYY-MM-DD)
+        const dateString = firstBlockStart.toISOString().split('T')[0];
+        
+        // 해당 날짜의 00:00:00 UTC 시간 생성
+        const expectedDayStart = new Date(`${dateString}T00:00:00.000Z`);
+        const expectedDayStartTime = expectedDayStart.getTime();
 
         // 날짜별로 00:00:00으로 시작하는지 검사
-        const dayStart = new Date(dailyBlocks[0].startTime).getTime();
-        const expectedStart = new Date(`${dateKey}T00:00:00.000Z`).getTime();
-
-        if (dayStart !== expectedStart) {
-            return res.status(400).json({ message: `${dateKey} 00시 00분 공백` });
+        if (firstBlockStartTime !== expectedDayStartTime) {
+            return res.status(400).json({ 
+                message: `${dayOfWeek} 00시 00분 공백`,
+                expected: expectedDayStart.toISOString(),
+                actual: dailyBlocks[0].startTime
+            });
         }
 
+        // 마지막 블록의 종료 시간 추출
+        const lastBlockEnd = new Date(dailyBlocks[dailyBlocks.length - 1].endTime);
+        const lastBlockEndTime = lastBlockEnd.getTime();
+
+        // 첫 번째 블록의 날짜에서 다음날 00:00:00 UTC 시간 생성 (24:00:00)
+        const nextDay = new Date(expectedDayStart);
+        nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+        const expectedDayEndTime = nextDay.getTime();
+
         // 24:00:00으로 끝나는지 검사
-        const dayEnd = new Date(dailyBlocks[dailyBlocks.length - 1].endTime).getTime();
-        // const expectedEnd = new Date(expectedStart);
-        // //expectedStart의 날짜에 + 1
-        // expectedEnd.setDate(expectedEnd.getDate() + 1);
-        // expectedEnd.setMilliseconds(expectedEnd.getDate() - 1);
-
-        const expectedEnd = new Date(`${dateKey}T24:00:00.000Z`).getTime();
-        console.log(expectedEnd);
-
-        if (dayEnd !== expectedEnd - 1) {
-            return res.status(400).json({ message: `${dateKey} 24시 00분 공백` });
+        if (lastBlockEndTime !== expectedDayEndTime) {
+            return res.status(400).json({ 
+                message: `${dayOfWeek} 24시 00분 공백`,
+                expected: expectedDayEnd.toISOString(),
+                actual: dailyBlocks[dailyBlocks.length - 1].endTime
+            });
         }
 
         // 빈 틈 검사
         for (let i = 1; i < dailyBlocks.length; i++) {
-            const lateEnd = new Date(dailyBlocks[i - 1].endTime).getTime();
-            const afterStart = new Date(dailyBlocks[i].startTime).getTime();
+            const prevEnd = new Date(dailyBlocks[i - 1].endTime).getTime();
+            const nextStart = new Date(dailyBlocks[i].startTime).getTime();
 
             // 이전 블록 종료 시간이 뒷 블록 시작 시간보다 늦을 경우
-            if (lateEnd > afterStart) {
+            if (prevEnd > nextStart) {
                 //409 Conflict와 함께 충돌난 블록 반환
                 return res.status(409).json({
                     message: 'time conflict',
+                    dayOfWeek: dayOfWeek,
                     preBlock: dailyBlocks[i - 1],
                     lateBlock: dailyBlocks[i]
                 });
             }
 
             // 이전 블록과 종료 시간과 뒷 블록 시작 시간이 같지 않을 경우
-            if (lateEnd !== afterStart) {
+            if (prevEnd !== nextStart) {
                 // 400 bad request와 함께 공백난 시간 반환
                 return res.status(400).json({
-                    message: `${dateKey} 중간 공백 발생`,
+                    message: `${dayOfWeek} 중간 공백 발생`,
                     gapStart: dailyBlocks[i - 1].endTime,
                     gapEnd: dailyBlocks[i].startTime
                 });
