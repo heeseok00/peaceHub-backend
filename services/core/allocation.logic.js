@@ -194,7 +194,10 @@ const executeGreedyAssignment = (users, taskPool) => {
 };
 
 module.exports = {
+    // 가용시간 전처리
     preprocessSchedule,
+    // 업무 전처리
     prepareTaskPool,
+    // 업무 분배
     executeGreedyAssignment,
 }

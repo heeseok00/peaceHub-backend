@@ -172,23 +172,12 @@ const getDailySchedule = async (userId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
 
-    // 시작, 종료 시간 설정 (UTC 변환 없이 날짜 유지)
-    const startTime = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate() + 1,
-        -15, 0, 0, 0
-    );
+    // 시작 시간
+    const startTime = new Date(targetDate);
+    startTime.setHours(startTime.getHours());
 
-    const endTime = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate() + 1,
-        8, 59, 59, 999
-    );
-    console.log(startTime);
-    console.log(endTime);
-
+    // 종료 시간
+    const endTime = new Date(startTime.getTime() + 24 * 60 * 60 * 1000 - 1);
 
     const [block, history] = await Promise.all([
         // ACTIVE, TEMPORARY조회
@@ -237,20 +226,15 @@ const getMemberDailySchedule = async (userId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
 
-    // 시작, 종료 시간 설정 (UTC 변환 없이 날짜 유지)
-    const startTime = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate(),
-        0, 0, 0, 0
-    );
+    // 시작 시간
+    const startTime = new Date(targetDate);
+    startTime.setHours(startTime.getHours());
 
-    const endTime = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth(),
-        targetDate.getDate(),
-        23, 59, 59, 999
-    );
+    // 종료 시간
+    const endTime = new Date(startTime.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+    console.log(startTime);
+    console.log(endTime);
 
     // 사용자가 속해있는 방 조회
     const user = await prisma.user.findUnique({
