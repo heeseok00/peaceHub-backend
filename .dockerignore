@@ -5,5 +5,5 @@ npm-debug.log
 Dockerfile
 README.md
 tests
-secretSSH.key
+secretsSSH.key
 publicSSH.key.pub
