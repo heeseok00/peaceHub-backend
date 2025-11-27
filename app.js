@@ -1,3 +1,5 @@
+// .env 파일에서 환경변수 읽어오기
+require('dotenv').config();
 const express = require('express'); // require express framework
 const cors = require('cors') // require cors
 const passport = require('passport'); // require passport middleware
@@ -13,11 +15,6 @@ const startScheduler = require('./scheduler'); // require scheduler
 
 const session = require('express-session'); // require express session middleware
 const {isLoggedIn:checkAuth} = require('./middlewares/checkAuth.middleware'); // require session check middleware
-
-const dotenv = require('dotenv'); // require env reader
-
-// .env 파일에서 환경변수 읽어오기
-dotenv.config();
 
 const app = express();
 
