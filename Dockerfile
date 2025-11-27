@@ -17,7 +17,7 @@ COPY . .
 RUN npx prisma generate
 
 # 컨테이너 포트 지정
-EXPOSE 22
+EXPOSE 8000
 
 # 
 CMD ["npm", "start"]

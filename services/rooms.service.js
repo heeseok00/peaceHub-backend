@@ -45,7 +45,7 @@ const createRoom = async (name, ownerId) => {
             title: template.title,
             difficulty: template.difficulty,
             estimatedTime: template.estimatedTime,
-
+            frequency: template.frequency,
             // 생성된 room 고유 id를 연결
             roomId: room.id,
         }));

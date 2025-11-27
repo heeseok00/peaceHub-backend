@@ -11,7 +11,7 @@ module.exports = () => {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
         // 로그인 성공 시 콜백 url 지정 auth.router에서 auth.controller googlecallback 호출
-        callbackURL: '/api/auth/google/callback',
+        callbackURL: process.env.BACKEND_URL+'/api/auth/google/callback',
       },
       // google로부터 받아온 프로필 정보와 완료 신호 함수(done)를 인자로 전달
       async (accessToken, refreshToken, profile, done) => {
