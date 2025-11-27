@@ -1,7 +1,7 @@
 const passport = require('passport'); // require passport middleware
 const GoogleStrategy = require('passport-google-oauth20').Strategy; // require google auth
 const authService = require('../../services/auth.service'); // require auth service
-
+console.log(process.env.BACKEND_URL + '/api/auth/google/callback');
 module.exports = () => {
   passport.use(
     // auth.router 안의 passport.authenticate 함수에서 읽어옴
