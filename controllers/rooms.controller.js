@@ -38,8 +38,6 @@ const createRoom = async (req, res, next) => {
     }
 };
 
-
-
 // 방 생성 컨트롤러
 const joinRoom = async (req, res, next) => {
     try {
@@ -72,10 +70,27 @@ const joinRoom = async (req, res, next) => {
     }
 };
 
+// 방 탈퇴 컨트롤러
+const quitRoom = async (req, res, next) => {
+    try{
+        const userId = req.user.id;
+
+        await roomService.quitRoom(userId);
+
+        res.status(204);
+    }
+    catch(error){
+        next(error);
+    }
+}
+
 module.exports = {
     // 방 생성 컨트롤러
     createRoom,
 
     // 방 참여 컨트롤러
     joinRoom,
+
+    // 방 탈퇴 컨트롤러
+    quitRoom,
 };

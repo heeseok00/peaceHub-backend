@@ -129,6 +129,7 @@ model ScheduleBlock {
 
   // 외래 키
   userId        String
+  name          String
   // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 

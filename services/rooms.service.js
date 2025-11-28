@@ -100,12 +100,75 @@ const joinRoom = async (inviteCode, userId) => {
     return room;
 };
 
+const quitRoom = async (userId) => {
+  // 유저, 방 정보 조회
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    // room 정보 전부 반환
+    include: { room: true }
+  });
+
+  const { room } = user;
+
+  // 탈퇴를 희망하는 인원이 방장이라면 방 전체 삭제
+  if (room.ownerId === userId) {
+    
+    await prisma.$transaction(async (tx) => {
+      // 모든 스케줄을 free로 초기화하여 에러 방지
+      await tx.scheduleBlock.updateMany({
+        where: {
+          roomTask: { roomId: room.id }
+        },
+        data: {
+          type: 'FREE',
+          roomTaskId: null,
+          difficulty: null
+        }
+      });
+
+      // 방 멤버 workLoad 초기화
+      await tx.user.updateMany({
+        where: { roomId: room.id },
+        data: { workLoad: 0 }
+      });
+
+      // 방 삭제 업무, 스케줄, 배정 업무들은 cascade로 자동적으로 일괄 삭제됨
+      await tx.room.delete({
+        where: { id: room.id }
+      });
+    });
+
+  } else {
+    // 방장 아닌 멤버 탈퇴
+    await prisma.$transaction(async (tx) => {
+      // 선호도 삭제
+      await tx.taskPreference.deleteMany({ where: { userId: userId } });
+
+      // 미래 스케줄 삭제
+      await tx.scheduleBlock.deleteMany({
+        where: { userId: userId, status: 'TEMPORARY' }
+      });
+
+      // 방 연결 해제, workLoad 초기화
+      await tx.user.update({
+        where: { id: userId },
+        data: { roomId: null, workLoad: 0 }
+      });
+    });
+  }
+
+  return;
+};
+
 module.exports = {
     // 방 생성 함수
     createRoom,
 
     // 방 참여 함수
     joinRoom,
+
+    // 방 탈퇴 함수
+    quitRoom,
 
     // error 식별 클래스
     RoomError,
