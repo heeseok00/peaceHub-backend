@@ -27,7 +27,15 @@ const registSchedule = async (table, userId) => {
             });
 
             // TEMPORARY 재작성
-            const temporaryData = timeBlock.map(block => ({ ...block, status: 'TEMPORARY' }));
+            const temporaryData = timeBlock.map(block => ({
+                userId: block.userId,
+                type: block.type,
+                startTime: block.startTime,
+                endTime: block.endTime,
+                status: 'TEMPORARY',
+                roomTaskId: null,
+                difficulty: null
+            }));
             await tx.scheduleBlock.createMany({ data: temporaryData });
 
             // 업데이트된 스케줄 블럭 반환
@@ -42,22 +50,32 @@ const registSchedule = async (table, userId) => {
         // 신규 유저
         else {
             // active 저장
-            const activeData = timeBlock.map(block => ({ ...block, status: 'ACTIVE' }));
+            const activeData = timeBlock.map(block => ({
+                userId: block.userId,
+                type: block.type,
+                startTime: block.startTime,
+                endTime: block.endTime,
+                status: 'ACTIVE',
+                roomTaskId: null,
+                difficulty: null
+            }));
             // temporary 저장
-            const temporaryData = timeBlock.map(b => {
-                const nextStart = new Date(b.startTime);
-                const nextEnd = new Date(b.endTime);
+            const temporaryData = timeBlock.map(block => {
+                const nextStart = new Date(block.startTime);
+                const nextEnd = new Date(block.endTime);
 
                 // ACTIVE 스케줄에 +7일
                 nextStart.setDate(nextStart.getDate() + 7);
                 nextEnd.setDate(nextEnd.getDate() + 7);
 
                 return {
-                    ...b,
-                    // 시작, 종료 날짜 변경
-                    startTime: nextStart,
-                    endTime: nextEnd,
-                    status: 'TEMPORARY'
+                    userId: block.userId,
+                    type: block.type,
+                    startTime: block.startTime,
+                    endTime: block.endTime,
+                    status: 'TEMPORARY',
+                    roomTaskId: null,
+                    difficulty: null
                 };
             });
 
