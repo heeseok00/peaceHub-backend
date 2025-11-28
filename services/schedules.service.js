@@ -15,8 +15,8 @@ const registSchedule = async (table, userId) => {
     }));
 
     const checkNewUser = await prisma.scheduleBlock.findFirst({
-        // ACTIVE 필드 여부로 신규 유저 판별
-        where: { userId: userId, status: 'ACTIVE' },
+        // 스케줄 블럭 존재 여부로 신규 유저 판별
+        where: { userId: userId },
     });
 
     const newSchedule = await prisma.$transaction(async (tx) => {
