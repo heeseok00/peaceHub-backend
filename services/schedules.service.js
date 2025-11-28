@@ -49,31 +49,31 @@ const registSchedule = async (table, userId) => {
 
         // 신규 유저
         else {
-            // active 저장
+            // temporary 저장
             const activeData = timeBlock.map(block => ({
                 userId: block.userId,
                 type: block.type,
                 startTime: block.startTime,
                 endTime: block.endTime,
-                status: 'ACTIVE',
+                status: 'TEMPORARY',
                 roomTaskId: null,
                 difficulty: null
             }));
-            // temporary 저장
+            // active 저장
             const temporaryData = timeBlock.map(block => {
                 const nextStart = new Date(block.startTime);
                 const nextEnd = new Date(block.endTime);
 
-                // ACTIVE 스케줄에 +7일
-                nextStart.setDate(nextStart.getDate() + 7);
-                nextEnd.setDate(nextEnd.getDate() + 7);
+                // TEMPORARY 스케줄에 -7일
+                nextStart.setDate(nextStart.getDate() - 7);
+                nextEnd.setDate(nextEnd.getDate() - 7);
 
                 return {
                     userId: block.userId,
                     type: block.type,
-                    startTime: block.startTime,
-                    endTime: block.endTime,
-                    status: 'TEMPORARY',
+                    startTime: nextStart,
+                    endTime: nextEnd,
+                    status: 'ACTIVE',
                     roomTaskId: null,
                     difficulty: null
                 };
