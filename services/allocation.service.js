@@ -81,7 +81,7 @@ const runWeeklyAssignment = async () => {
     const assignmentResults = executeGreedyAssignment(userStates, taskPool);
 
     // 트랜잭션으로 일괄 저장
-    const queries = generateSaveQueries(assignmentResults.users, assignmentResults.taskPool);
+    const queries = generateSaveQueries(assignmentResults);
     transactionOperations.push(...queries);
   }
 
