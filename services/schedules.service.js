@@ -49,42 +49,101 @@ const registSchedule = async (table, userId) => {
 
         // 신규 유저
         else {
-            // temporary 저장
-            const activeData = timeBlock.map(block => ({
-                userId: block.userId,
-                type: block.type,
-                startTime: block.startTime,
-                endTime: block.endTime,
-                status: 'TEMPORARY',
-                roomTaskId: null,
-                difficulty: null
-            }));
-            // active 저장
-            const temporaryData = timeBlock.map(block => {
-                const nextStart = new Date(block.startTime);
-                const nextEnd = new Date(block.endTime);
+            // 스케줄 스킵하고 수정 페이지에서 등록하는지, 방 참여 후 바로 등록하는지 확인
+            // 첫 데이터 블록의 날짜
+            const inputFirstDate = new Date(table[0].startTime);
 
-                // TEMPORARY 스케줄에 -7일
-                nextStart.setDate(nextStart.getDate() - 7);
-                nextEnd.setDate(nextEnd.getDate() - 7);
+            // 이번 주 월요일 계산
+            const today = new Date();
+            const currentDay = today.getDay();
+            const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
 
-                return {
-                    userId: block.userId,
+            const thisWeekMonday = new Date(today.setDate(diffToMonday));
+            thisWeekMonday.setHours(0, 0, 0, 0);
+
+            // 입력 데이터 주간 월요일 계산
+            const inputDay = inputFirstDate.getDay();
+            const inputDiff = inputFirstDate.getDate() - inputDay + (inputDay === 0 ? -6 : 1);
+
+            const inputWeekMonday = new Date(inputFirstDate.setDate(inputDiff));
+            inputWeekMonday.setHours(0, 0, 0, 0);
+
+            // 이번 주인지 확인
+            const isInputThisWeek = thisWeekMonday.getTime() === inputWeekMonday.getTime();
+
+            let activeData = [];
+            let temporaryData = [];
+
+            if (isInputThisWeek) {
+                // 방 참여 이후 바로 등록
+                
+                // 받은 데이터를 이번 주 스케줄로 저장
+                activeData = table.map(block => ({
+                    userId: userId,
                     type: block.type,
-                    startTime: nextStart,
-                    endTime: nextEnd,
+                    startTime: new Date(block.startTime),
+                    endTime: new Date(block.endTime),
                     status: 'ACTIVE',
                     roomTaskId: null,
                     difficulty: null
-                };
-            });
+                }));
 
-            // 신규 유저이므로 삭제 없이 바로 생성
+                // 받은 데이터를 다음 주 스케줄로 저장
+                temporaryData = table.map(block => {
+                    const nextStart = new Date(block.startTime);
+                    const nextEnd = new Date(block.endTime);
+                    nextStart.setDate(nextStart.getDate() + 7);
+                    nextEnd.setDate(nextEnd.getDate() + 7);
+
+                    return {
+                        userId: userId,
+                        type: block.type,
+                        startTime: nextStart,
+                        endTime: nextEnd,
+                        status: 'TEMPORARY',
+                        roomTaskId: null,
+                        difficulty: null
+                    };
+                });
+
+            } else {
+                // 방 참여 이후 스케줄 저장 스킵
+                
+                // 받은 데이터를 다음 주 스케줄로 저장
+                temporaryData = table.map(block => ({
+                    userId: userId,
+                    type: block.type,
+                    startTime: new Date(block.startTime),
+                    endTime: new Date(block.endTime),
+                    status: 'TEMPORARY',
+                    roomTaskId: null,
+                    difficulty: null
+                }));
+
+                // 7일 빼서 이번 주 스케줄로 저장
+                activeData = table.map(block => {
+                    const prevStart = new Date(block.startTime);
+                    const prevEnd = new Date(block.endTime);
+                    prevStart.setDate(prevStart.getDate() - 7);
+                    prevEnd.setDate(prevEnd.getDate() - 7);
+
+                    return {
+                        userId: userId,
+                        type: block.type,
+                        startTime: prevStart,
+                        endTime: prevEnd,
+                        status: 'ACTIVE',
+                        roomTaskId: null,
+                        difficulty: null
+                    };
+                });
+            }
+
+            // 일괄 저장
             await tx.scheduleBlock.createMany({
                 data: [...activeData, ...temporaryData]
             });
 
-            // 생성된 스케줄(ACTIVE) 반환
             return null;
         }
     });
