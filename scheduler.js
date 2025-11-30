@@ -2,7 +2,7 @@ const cron = require('node-cron'); // 스케줄러
 const allocationService = require('./services/allocation.service'); // 업무 분배 알고리즘
 const scheduleService = require('./services/schedules.service'); // 스케줄 아카이빙, 승격, 복제
 
-const task = cron.schedule('5 * * * *', async () => {
+const task = cron.schedule('*/5 * * * *', async () => {
   try {
     // 스케줄 아카이빙, 승격, 복사 진행
     console.log('start archiving, promotion, copy');
