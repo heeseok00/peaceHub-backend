@@ -13,7 +13,7 @@ const generateSaveQueries = (assignmentResults) => {
 
   if (assignedTasks.length > 0) {
     // DB 발사
-    const createTimeBlock = prisma.scheduleBlock.createMany({
+    const createTimeBlock = prisma.ScheduleBlock.createMany({
       data: assignedTasks.map(task => ({
         // 누가
         userId: task.assignedUserId,
