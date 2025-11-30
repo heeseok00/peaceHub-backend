@@ -22,7 +22,7 @@ const generateSaveQueries = (assignmentResults) => {
         // 언제 시작
         startTime: new Date(task.startTime),
         // 언제 끝
-        endTime: task.endTime,
+        endTime: new Date(task.endTime),
         // 업무 난이도
         difficulty: task.difficulty,
         // 스케줄 블록 type을 TASK로 변경
