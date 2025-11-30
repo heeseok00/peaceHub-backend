@@ -77,7 +77,7 @@ const prepareTaskPool = (roomTasks) => {
 
 // 그리디 업무 분배 시작
 const executeGreedyAssignment = (users, taskPool) => {
-
+    console.log('start greedy allocation');
     // 수정 용이성을 위해 상수 정의
     const CONFIG = {
         // 업무 시간
