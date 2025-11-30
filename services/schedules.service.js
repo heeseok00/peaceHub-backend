@@ -345,10 +345,7 @@ const getMemberDailySchedule = async (userId, date) => {
                     select: { title: true }
                 },
                 user: {
-                    select: {
-                        // 모두의 타임 테이블에서 이름 출력 가능
-                        name: true,
-                    }
+                    select: { name: true }
                 }
             },
             // 시간 순 정렬
@@ -359,14 +356,15 @@ const getMemberDailySchedule = async (userId, date) => {
         prisma.scheduleHistory.findMany({
             where: {
                 // 사용자의 방 멤버 필터링
-                user: { roomId: myRoomId },
+                user: { roomId: myRoomId }, 
                 startTime: {
                     gte: startTime,
                     lte: endTime,
                 },
             },
             include: {
-                roomTask: { select: { title: true } }
+                roomTask: { select: { title: true } },
+                user: { select: { name: true }}
             },
             orderBy: { startTime: 'asc' },
         }),
