@@ -4,9 +4,9 @@ const { mergeIntervals, subtractIntervals } = require('../allocationUtils/alloca
 const preprocessSchedule = async (room) => {
     const allQuietBlocks = [];
     // 방에 속한 사용자들을 순회하며 모든 QUIET 시간 중 시작, 종료 시간을 배열에 저장
-    room.members.forEach(member => {
+    room.participants.forEach(participants => {
         // QUIET만 걸러서 저장
-        const quiets = member.scheduleBlocks.filter(b => b.type === 'QUIET');
+        const quiets = participants.scheduleBlocks.filter(b => b.type === 'QUIET');
         // QUIET의 배열의 시작, 종료 시간을 추출하여 배열에 저장
         quiets.forEach(q => {
             allQuietBlocks.push({
@@ -21,7 +21,7 @@ const preprocessSchedule = async (room) => {
 
     
     // 개인 FREE 시간 계산 멤버마다 계산 반복하여 만든 배열을 전처리 결과로 반환
-    return room.members.map(user => {
+    return room.participants.map(user => {
         // FREE 블록 가져오기
         const myFreeBlocks = user.scheduleBlocks
             .filter(block => block.type === 'FREE')

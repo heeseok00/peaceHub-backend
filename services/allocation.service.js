@@ -55,7 +55,7 @@ const runWeeklyAssignment = async () => {
   // 방 정보를 가져올 때 사용자, 그 사용자의 ACTIVE 스케줄블럭, 선호 업무, 방 업무까지 포함
   const rooms = await prisma.room.findMany({
     include: {
-      members: {
+      participants: {
         include: {
           scheduleBlocks: { where: { status: 'ACTIVE' } },
           taskPreferences: true
