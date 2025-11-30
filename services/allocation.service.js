@@ -20,7 +20,7 @@ const generateSaveQueries = (assignmentResults) => {
         // 어떤 업무를
         roomTaskId: task.id,
         // 언제 시작
-        startTime: task.startTime,
+        startTime: new Date(task.startTime),
         // 언제 끝
         endTime: task.endTime,
         // 업무 난이도
