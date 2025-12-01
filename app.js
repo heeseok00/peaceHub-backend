@@ -46,11 +46,11 @@ app.use(
     saveUninitialized: false, 
     cookie: {
       // 도메인간 저장
-      sameSite: 'none',
+      sameSite: 'lax',
       // true = JavaScript 코드로 쿠키 접근 방지
       httpOnly: true, 
       // true = http 환경 외에서 쿠키 전송 방지 개발할 땐 false로 두기
-      secure: true,
+      secure: false,
     },
   })
 );
