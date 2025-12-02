@@ -72,8 +72,10 @@ CREATE TABLE `ScheduleBlock` (
     `difficulty` INTEGER NULL,
     `roomTaskId` VARCHAR(191) NULL,
     `userId` VARCHAR(191) NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
 
     INDEX `ScheduleBlock_userId_startTime_status_idx`(`userId`, `startTime`, `status`),
+    INDEX `ScheduleBlock_roomId_startTime_idx`(`roomId`, `startTime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -86,8 +88,10 @@ CREATE TABLE `ScheduleHistory` (
     `roomTaskId` VARCHAR(191) NULL,
     `difficulty` INTEGER NULL,
     `userId` VARCHAR(191) NOT NULL,
+    `roomId` VARCHAR(191) NOT NULL,
 
     INDEX `ScheduleHistory_userId_startTime_idx`(`userId`, `startTime`),
+    INDEX `ScheduleHistory_roomId_startTime_idx`(`roomId`, `startTime`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -113,7 +117,13 @@ ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_roomTaskId_fkey` FOREI
 ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
+ALTER TABLE `ScheduleBlock` ADD CONSTRAINT `ScheduleBlock_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
 ALTER TABLE `ScheduleHistory` ADD CONSTRAINT `ScheduleHistory_roomTaskId_fkey` FOREIGN KEY (`roomTaskId`) REFERENCES `RoomTask`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `ScheduleHistory` ADD CONSTRAINT `ScheduleHistory_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ScheduleHistory` ADD CONSTRAINT `ScheduleHistory_roomId_fkey` FOREIGN KEY (`roomId`) REFERENCES `Room`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

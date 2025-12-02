@@ -10,7 +10,7 @@ datasource db {
 // User Model
 model User {
   id           String    @id @default(cuid()) // 사용자 난수 생성 id
-  googleId     String    @unique // 구글 고유 id
+  googleId     String    @unique // 구글 고유 ids
   email        String    @unique // 구글 메일
   name         String? // 구글 이름->프로필 설정 시 수정 
   createdAt    DateTime  @default(now()) 
@@ -51,6 +51,10 @@ model Room {
 
   // 배정 가능 업무 목록
   RoomTasks RoomTask[]
+
+  ScheduleBlocks ScheduleBlock[]
+
+  ScheduleHistories ScheduleHistory[]
 }
 
 // RoomTaskTemplate Modle 방이 생성될 때마다 템플릿에서 업무를 복사
@@ -132,8 +136,13 @@ model ScheduleBlock {
   // User에서 User.id 참조하여 userId에 작성 관계가 명확하므로 관계명 설정 x 유저 탈퇴 시 업무 삭제
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // 외래 키
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
   // 탐색 속도 향상을 위한 인덱스
   @@index([userId, startTime, status])
+  @@index([roomId, startTime])
 }
 
 enum TimeBlockType {
@@ -167,6 +176,11 @@ model ScheduleHistory {
   userId        String
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // 외래 키
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
   // 날짜별 조회용 인덱스
   @@index([userId, startTime])
+  @@index([roomId, startTime])
 }

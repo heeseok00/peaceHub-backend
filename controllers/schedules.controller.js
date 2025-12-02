@@ -9,9 +9,11 @@ const registSchedule = async (req, res, next) => {
         // 사용자 id 추출
         const userId = req.user.id;
 
+        const userRoomId = req.user.roomId;
+
         // service 호출
         // await 후 서비스에서 생성한 스케줄 객체 배열 반환
-        const newSchedule = await scheduleService.registSchedule(table, userId);
+        const newSchedule = await scheduleService.registSchedule(table, userId, userRoomId);
 
         if (newSchedule) {
             // 기존 유저 201 create와 함께 수정된 스케줄 데이터 반환
@@ -31,8 +33,9 @@ const getActiveSchedule = async (req, res, next) => {
     try {
         // userId 추출
         const userId = req.user.id;
+        const userRoomId = req.user.roomId;
         // service 호출
-        const schedule = await scheduleService.getSchedule(userId, 'ACTIVE');
+        const schedule = await scheduleService.getSchedule(userId, userRoomId, 'ACTIVE');
 
         // 200 Ok와 함깨 스케줄 객체 배열 반환
         res.status(200).json(schedule);
@@ -46,8 +49,9 @@ const getTemporarySchedule = async (req, res, next) => {
     try {
         // userId 추출
         const userId = req.user.id;
+        const userRoomId = req.user.roomId;
         // service 호출
-        const schedule = await scheduleService.getSchedule(userId, 'TEMPORARY');
+        const schedule = await scheduleService.getSchedule(userId, userRoomId, 'TEMPORARY');
 
         // 200 Ok와 함깨 스케줄 객체 배열 반환
         res.status(200).json(schedule);
@@ -61,6 +65,7 @@ const getDailySchedule = async(req,res,next)=>{
     try{
         // userId 추출
         const userId = req.user.id;
+        const userRoomId = req.user.roomId;
         const {date} = req.query;
 
         // 날짜 파라미터 유효성 검사
@@ -70,7 +75,7 @@ const getDailySchedule = async(req,res,next)=>{
             });
         }
 
-        const dailySchedule = await scheduleService.getDailySchedule(userId, date);
+        const dailySchedule = await scheduleService.getDailySchedule(userId, userRoomId, date);
 
         // 200 Ok와 함께 스케줄 객체 배열 반환
         res.status(200).json(dailySchedule);
@@ -84,6 +89,7 @@ const getMemberDailySchedule = async(req,res,next)=>{
     try{
         // userId 추출
         const userId = req.user.id;
+        const userRoomId = req.user.roomId;
         const {date} = req.query;
 
         // 날짜 파라미터 유효성 검사
@@ -93,7 +99,7 @@ const getMemberDailySchedule = async(req,res,next)=>{
             });
         }
 
-        const dailySchedule = await scheduleService.getMemberDailySchedule(userId, date);
+        const dailySchedule = await scheduleService.getMemberDailySchedule(userId, userRoomId, date);
 
         // 200 Ok와 함께 스케줄 객체 배열 반환
         res.status(200).json(dailySchedule);
@@ -106,8 +112,8 @@ const getMemberWeeklyTaskSchedule = async(req,res,next)=>{
     try{
         // userId 추출
         const userId = req.user.id;
-
-        const weeklyTask = await scheduleService.getMemberWeeklyTaskSchedule(userId);
+        const userRoomId = req.user.roomId;
+        const weeklyTask = await scheduleService.getMemberWeeklyTaskSchedule(userId, userRoomId);
 
         // 200 Ok와 함께 스케줄 객체 배열 반환
         res.status(200).json(weeklyTask);

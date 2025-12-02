@@ -1,7 +1,7 @@
 const prisma = require('../prismaClient');
 
 // 스케줄 등록, 수정
-const registSchedule = async (table, userId) => {
+const registSchedule = async (table, userId, userRoomId) => {
     // 날짜 문자열을 date 객체로 변경
     const timeBlock = table.map((block) => ({
         // 사용자 id
@@ -12,6 +12,8 @@ const registSchedule = async (table, userId) => {
         startTime: new Date(block.startTime),
         // 종료 시간
         endTime: new Date(block.endTime),
+        // 방 id
+        roomId: userRoomId
     }));
 
     const checkNewUser = await prisma.scheduleBlock.findFirst({
@@ -23,7 +25,10 @@ const registSchedule = async (table, userId) => {
         if (checkNewUser) {
             // 기존 유저의 경우 TEMPORARY만 삭제
             await tx.scheduleBlock.deleteMany({
-                where: { userId: userId, status: 'TEMPORARY' },
+                where: {
+                    userId: userId,
+                    status: 'TEMPORARY'
+                },
             });
 
             // TEMPORARY 재작성
@@ -34,8 +39,10 @@ const registSchedule = async (table, userId) => {
                 endTime: block.endTime,
                 status: 'TEMPORARY',
                 roomTaskId: null,
-                difficulty: null
+                difficulty: null,
+                roomId: userRoomId
             }));
+
             await tx.scheduleBlock.createMany({ data: temporaryData });
 
             // 업데이트된 스케줄 블럭 반환
@@ -52,13 +59,14 @@ const registSchedule = async (table, userId) => {
             // 스케줄 스킵하고 수정 페이지에서 등록하는지, 방 참여 후 바로 등록하는지 확인
             // 첫 데이터 블록의 날짜
             const inputFirstDate = new Date(table[0].startTime);
-
+            console.log(inputFirstDate);
             // 이번 주 월요일 계산
             const today = new Date();
             const currentDay = today.getDay();
             const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
 
             const thisWeekMonday = new Date(today.setDate(diffToMonday));
+            console.log(thisWeekMonday);
             thisWeekMonday.setHours(0, 0, 0, 0);
 
             // 입력 데이터 주간 월요일 계산
@@ -76,7 +84,7 @@ const registSchedule = async (table, userId) => {
 
             if (isInputThisWeek) {
                 // 방 참여 이후 바로 등록
-                
+
                 // 받은 데이터를 이번 주 스케줄로 저장
                 activeData = table.map(block => ({
                     userId: userId,
@@ -85,7 +93,8 @@ const registSchedule = async (table, userId) => {
                     endTime: new Date(block.endTime),
                     status: 'ACTIVE',
                     roomTaskId: null,
-                    difficulty: null
+                    difficulty: null,
+                    roomId: userRoomId
                 }));
 
                 // 받은 데이터를 다음 주 스케줄로 저장
@@ -102,13 +111,14 @@ const registSchedule = async (table, userId) => {
                         endTime: nextEnd,
                         status: 'TEMPORARY',
                         roomTaskId: null,
-                        difficulty: null
+                        difficulty: null,
+                        roomId: userRoomId
                     };
                 });
 
             } else {
                 // 방 참여 이후 스케줄 저장 스킵
-                
+
                 // 받은 데이터를 다음 주 스케줄로 저장
                 temporaryData = table.map(block => ({
                     userId: userId,
@@ -117,7 +127,8 @@ const registSchedule = async (table, userId) => {
                     endTime: new Date(block.endTime),
                     status: 'TEMPORARY',
                     roomTaskId: null,
-                    difficulty: null
+                    difficulty: null,
+                    roomId: userRoomId
                 }));
 
                 // 7일 빼서 이번 주 스케줄로 저장
@@ -134,7 +145,8 @@ const registSchedule = async (table, userId) => {
                         endTime: prevEnd,
                         status: 'ACTIVE',
                         roomTaskId: null,
-                        difficulty: null
+                        difficulty: null,
+                        roomId: userRoomId
                     };
                 });
             }
@@ -152,9 +164,11 @@ const registSchedule = async (table, userId) => {
 };
 
 // status에 따른 스케줄 조회
-const getSchedule = async (userId, status) => {
+const getSchedule = async (userId, userRoomId, status) => {
+
     return prisma.scheduleBlock.findMany({
         where: {
+            roomId: userRoomId,
             userId: userId,
             status: status,
         },
@@ -189,6 +203,7 @@ const archiveAndCopySchedule = async () => {
                     roomTaskId: block.roomTaskId,
                     difficulty: block.difficulty,
                     userId: block.userId,
+                    roomId: block.roomId
                 }));
                 await tx.scheduleHistory.createMany({ data: historyData });
 
@@ -229,6 +244,7 @@ const archiveAndCopySchedule = async () => {
                         status: 'TEMPORARY',
                         roomTaskId: null,
                         difficulty: null,
+                        roomId: block.roomId
                     };
                 });
 
@@ -245,7 +261,7 @@ const archiveAndCopySchedule = async () => {
 };
 
 // 사용자의 일일 스케줄 반환
-const getDailySchedule = async (userId, date) => {
+const getDailySchedule = async (userId, userRoomId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
 
@@ -260,6 +276,7 @@ const getDailySchedule = async (userId, date) => {
         // ACTIVE, TEMPORARY조회
         prisma.scheduleBlock.findMany({
             where: {
+                roomId: userRoomId,
                 userId: userId,
                 // status를 조회하지 않는 것으로 ACTIVE, TEMPORARY 동시 조회
                 // status: '',
@@ -282,6 +299,7 @@ const getDailySchedule = async (userId, date) => {
         // ScheduleHistory 조회
         prisma.scheduleHistory.findMany({
             where: {
+                roomId: userRoomId,
                 userId: userId,
                 startTime: {
                     gte: startTime,
@@ -299,7 +317,7 @@ const getDailySchedule = async (userId, date) => {
 };
 
 // 멤버들의 TASK, QUIET 블록 요청
-const getMemberDailySchedule = async (userId, date) => {
+const getMemberDailySchedule = async (userId, userRoomId, date) => {
     // 쿼리 파라미터에서 Date 객체로 저장
     const targetDate = new Date(date);
 
@@ -310,23 +328,11 @@ const getMemberDailySchedule = async (userId, date) => {
     // 종료 시간
     const endTime = new Date(startTime.getTime() + 24 * 60 * 60 * 1000 - 1);
 
-    console.log(startTime);
-    console.log(endTime);
-
-    // 사용자가 속해있는 방 조회
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { roomId: true }
-    });
-
-    const myRoomId = user.roomId;
-
     const [block, history] = await Promise.all([
         // ACTIVE, TEMPORARY조회
         prisma.scheduleBlock.findMany({
             where: {
-                // 사용자의 방 멤버 필터링
-                user: { roomId: myRoomId },
+                roomId: userRoomId,
                 // status를 조회하지 않는 것으로 ACTIVE, TEMPORARY 동시 조회
                 // status: '',
                 // 날짜 조회
@@ -356,7 +362,7 @@ const getMemberDailySchedule = async (userId, date) => {
         prisma.scheduleHistory.findMany({
             where: {
                 // 사용자의 방 멤버 필터링
-                user: { roomId: myRoomId }, 
+                roomId: userRoomId,
                 startTime: {
                     gte: startTime,
                     lte: endTime,
@@ -364,7 +370,7 @@ const getMemberDailySchedule = async (userId, date) => {
             },
             include: {
                 roomTask: { select: { title: true } },
-                user: { select: { name: true }}
+                user: { select: { name: true } }
             },
             orderBy: { startTime: 'asc' },
         }),
@@ -374,20 +380,12 @@ const getMemberDailySchedule = async (userId, date) => {
 };
 
 // 멤버들에게 할당된 업무 조회
-const getMemberWeeklyTaskSchedule = async (userId) => {
-
-    // 사용자가 속해있는 방 조회
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { roomId: true }
-    });
-
-    const myRoomId = user.roomId;
+const getMemberWeeklyTaskSchedule = async (userId, userRoomId) => {
 
     return prisma.scheduleBlock.findMany({
         where: {
             // 사용자의 방 멤버 필터링
-            user: { roomId: myRoomId },
+            roomId: userRoomId,
             status: 'ACTIVE',
             type: 'TASK'
         },
