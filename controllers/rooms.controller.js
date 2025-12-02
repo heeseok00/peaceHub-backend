@@ -77,7 +77,7 @@ const quitRoom = async (req, res, next) => {
 
         await roomService.quitRoom(userId);
 
-        res.status(204);
+        res.status(204).send();
     }
     catch(error){
         next(error);
