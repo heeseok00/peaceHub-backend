@@ -230,8 +230,9 @@ const archiveAndCopySchedule = async () => {
                 // 날짜를 +7일 하여 TEMPORARY 데이터 생성
                 const nextWeekSchedule = currentActiveSchedule.map(block => {
                     const startTime = new Date(block.startTime);
+                    console.log(startTime);
                     startTime.setDate(startTime.getDate() + 7);
-
+                    console.log(startTime);
                     const endTime = new Date(block.endTime);
                     endTime.setDate(endTime.getDate() + 7);
 

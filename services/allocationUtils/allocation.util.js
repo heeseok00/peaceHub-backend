@@ -13,7 +13,7 @@ const mergeIntervals = (intervals) => {
     // ex) 09:30 ~ 11:00 / 10:00 ~ 12:00 중간이 겹치므로 09:30~12:00으로 합침
     if (currentBlock.startTime < lastBlock.endTime) {
       // QUIET 시간이 겹치면 합쳐서 하나의 블록으로 만들기
-      lastBlock.endTime = new Date(Math.max(lastBlock.endTime, currentBlock.endTime));
+      lastBlock.endTime = (Math.max(lastBlock.endTime, currentBlock.endTime));
     } else {
       // 안 겹치면 추가
       mergedList.push(currentBlock);

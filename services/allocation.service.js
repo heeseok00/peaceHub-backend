@@ -28,7 +28,9 @@ const generateSaveQueries = (assignmentResults) => {
         // 스케줄 블록 type을 TASK로 변경
         type: 'TASK',
         // ACTIVE
-        status: 'ACTIVE'
+        status: 'ACTIVE',
+        // roomId
+        roomId: task.roomId  
       }))
     });
 
