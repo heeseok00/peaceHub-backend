@@ -59,14 +59,12 @@ const registSchedule = async (table, userId, userRoomId) => {
             // 스케줄 스킵하고 수정 페이지에서 등록하는지, 방 참여 후 바로 등록하는지 확인
             // 첫 데이터 블록의 날짜
             const inputFirstDate = new Date(table[0].startTime);
-            console.log(inputFirstDate);
             // 이번 주 월요일 계산
             const today = new Date();
             const currentDay = today.getDay();
             const diffToMonday = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1);
 
             const thisWeekMonday = new Date(today.setDate(diffToMonday));
-            console.log(thisWeekMonday);
             thisWeekMonday.setHours(0, 0, 0, 0);
 
             // 입력 데이터 주간 월요일 계산
@@ -230,9 +228,7 @@ const archiveAndCopySchedule = async () => {
                 // 날짜를 +7일 하여 TEMPORARY 데이터 생성
                 const nextWeekSchedule = currentActiveSchedule.map(block => {
                     const startTime = new Date(block.startTime);
-                    console.log(startTime);
                     startTime.setDate(startTime.getDate() + 7);
-                    console.log(startTime);
                     const endTime = new Date(block.endTime);
                     endTime.setDate(endTime.getDate() + 7);
 
