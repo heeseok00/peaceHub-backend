@@ -44,9 +44,10 @@ app.use(
     resave: false,
     // true = 로그인 하지 않은 사용자의 빈 세션 저장
     saveUninitialized: false, 
+    proxy: true,
     cookie: {
       // 도메인간 저장
-      sameSite: 'none',
+      sameSite: 'lax',
       // true = JavaScript 코드로 쿠키 접근 방지
       httpOnly: true, 
       // true = http 환경 외에서 쿠키 전송 방지 개발할 땐 false로 두기

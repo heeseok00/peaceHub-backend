@@ -340,7 +340,7 @@ const getMemberDailySchedule = async (userId, userRoomId, date) => {
                 },
                 // QUIET 시간과 업무시간만 가져오기
                 type: {
-                    in: ['QUIET', 'TASK']
+                    in: ['QUIET', 'TASK', 'BUSY']
                 }
             },
             include: {
