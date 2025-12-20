@@ -52,7 +52,7 @@ app.use(
       httpOnly: true, 
       // true = http 환경 외에서 쿠키 전송 방지 개발할 땐 false로 두기
       secure: true,
-      domain: undefined,
+      domain: '.peacehub.kr',
     },
   })
 );
