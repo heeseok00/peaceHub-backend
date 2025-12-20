@@ -80,7 +80,7 @@ app.use('/api/schedules', checkAuth, scheduleRouter);
 app.use('/api/tasks', checkAuth, taskRouter);
 
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.send('Server running');
 });
 

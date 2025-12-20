@@ -1,3 +1,3 @@
-158.180.85.169.nip.io {
+peacehub.kr {
     reverse_proxy app:8000
 }
